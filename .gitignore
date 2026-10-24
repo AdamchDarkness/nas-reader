@@ -1,0 +1,20 @@
+# builds
+bin/
+obj/
+dist/
+*.user
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.iml
+
+# signing key: never in git
+keys/
+
+# local
+.claude/
+*.tmp
