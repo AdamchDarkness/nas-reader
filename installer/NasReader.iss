@@ -5,6 +5,9 @@
 #ifndef AppVersion
   #define AppVersion "1.1.0"
 #endif
+#ifndef SourceExe
+  #define SourceExe "..\dist\NasReader.exe"
+#endif
 
 [Setup]
 AppId={{6F1C2A4E-3B7D-4C9A-9E51-2D8B7A4F0C13}
@@ -40,7 +43,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "..\dist\NasReader.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourceExe}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\Nas Reader"; Filename: "{app}\NasReader.exe"

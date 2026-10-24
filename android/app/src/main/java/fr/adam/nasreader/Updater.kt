@@ -26,6 +26,8 @@ object Updater {
     @Volatile var page: String? = null
     @Volatile var error: String? = null
     private var apk: File? = null
+    /** Set while the user is in Android's "install unknown apps" screen: install on return. */
+    @Volatile var resumeInstall = false
 
     val current: String by lazy {
         App.ctx.packageManager.getPackageInfo(App.ctx.packageName, 0).versionName ?: "0"
@@ -91,12 +93,14 @@ object Updater {
         val f = apk ?: return false
         val ctx = App.ctx
         if (Build.VERSION.SDK_INT >= 26 && !ctx.packageManager.canRequestPackageInstalls()) {
+            resumeInstall = true
             ctx.startActivity(
                 Intent(AndroidSettings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
             return true
         }
+        resumeInstall = false
         val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.updates", f)
         ctx.startActivity(
             Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")

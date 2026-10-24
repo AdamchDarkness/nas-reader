@@ -1824,7 +1824,10 @@ let lastSyncVersion = null;
 async function watch() {
   try {
     const st = await api("/api/status");
+    const rescanned = st.scannedAt && st.scannedAt !== S.status.scannedAt && !st.scanning;
     S.status = { ...S.status, ...st };
+    // A scan finished without the screen watching it (started from Settings or on another view).
+    if (rescanned && !polling) { await loadLibrary(); await reloadUserData(); if (!R.el && !$("#sheet")) refresh(); }
     const v = st.sync?.version;
     if (lastSyncVersion !== null && v !== lastSyncVersion) {
       await reloadUserData();

@@ -9,7 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>NasReader</AssemblyName>
     <Product>Nas Reader</Product>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Company>AdamchDarkness</Company>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

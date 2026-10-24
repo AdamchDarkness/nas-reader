@@ -86,6 +86,12 @@ class MainActivity : Activity() {
         }.start()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Back from "allow installs from Nas Reader": carry on with the update.
+        if (Updater.resumeInstall && (Build.VERSION.SDK_INT < 26 || packageManager.canRequestPackageInstalls())) Updater.install()
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         web.evaluateJavascript("window.nasBack ? nasBack() : false") { handled ->
