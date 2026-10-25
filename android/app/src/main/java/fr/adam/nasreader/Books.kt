@@ -75,6 +75,11 @@ object Books {
         }
     }
 
+    /** Closes a book's files, e.g. before deleting its downloaded copy. */
+    fun forget(id: String) = synchronized(open) {
+        open.remove(id)?.thenAccept { runCatching { it.close() } }
+    }
+
     fun prefetch(book: Book) {
         if (book.fmt !in setOf("pdf", "cbz", "cbr", "cb7")) return
         pool.execute {
@@ -87,12 +92,14 @@ object Books {
 
     /** The file as it is on the NAS, or the local copy when there is one. */
     fun openFile(book: Book): RandomFile {
+        Offline.file(book)?.let { return LocalFile(it) }
         val local = File(App.files, "${book.id}.${book.fmt}")
         return if (local.exists() && local.length() == book.size) LocalFile(local) else Fs.open(book.path, book.size)
     }
 
     /** EPUB and MOBI are handed to the reader as whole files, so they are copied first. */
     fun localCopy(book: Book): File {
+        Offline.file(book)?.let { return it }
         val local = File(App.files, "${book.id}.${book.fmt}")
         if (local.exists() && local.length() == book.size) {
             local.setLastModified(System.currentTimeMillis()); return local

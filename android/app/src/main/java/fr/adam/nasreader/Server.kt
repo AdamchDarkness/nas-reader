@@ -39,8 +39,12 @@ class Server : NanoHTTPD("127.0.0.1", 0) {
                     .put("error", Library.error ?: JSONObject.NULL).put("scannedAt", Library.scannedAt).put("count", Library.books.size)
                     .put("enriching", Enricher.running).put("enrichDone", Enricher.done.get()).put("enrichTotal", Enricher.total)
                     .put("sync", syncJson())
+                    .put("nas", Reach.nas())
                     .put("update", Updater.status())
             )
+            get && p == listOf("api", "offline") -> json(Offline.status())
+            post && p == listOf("api", "offline") -> { Offline.enqueue(Json.strings(JSONArray(body(s)))); json(Offline.status()) }
+            post && p == listOf("api", "offline-remove") -> { Offline.remove(Json.strings(JSONArray(body(s)))); json(Offline.status()) }
             post && p == listOf("api", "sync") -> { runCatching { Sync.runNow() }; json(syncJson()) }
             get && p == listOf("api", "update") -> json(Updater.status())
             post && p == listOf("api", "update", "check") -> { Updater.check(); json(Updater.status()) }
@@ -89,6 +93,8 @@ class Server : NanoHTTPD("127.0.0.1", 0) {
 
     private fun book(s: IHTTPSession, p: List<String>): Response {
         val b = Library.get(p[2]) ?: return notFound()
+        if (p[3] in setOf("open", "file") && Fs.isSmb(b.path) && Offline.file(b) == null && !Reach.nas())
+            return json(JSONObject().put("error", "Ce livre n'est pas téléchargé sur l'appareil et la NAS n'est pas joignable. Il s'ouvrira de retour à la maison."), Response.Status.SERVICE_UNAVAILABLE)
         return when (p[3]) {
             "open" -> {
                 val ob = Books.get(b)

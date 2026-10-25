@@ -126,6 +126,12 @@ input, select { font: inherit; color: inherit; }
 .update span { color: var(--muted); font-size: 13.5px; }
 .update .btns { margin: 0 0 0 auto; }
 .update .btn { padding: 8px 14px; font-size: 13.5px; }
+.cover .dl { position: absolute; left: 7px; bottom: 9px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 20px; background: rgba(10,12,18,.82); color: #fff; font: 600 10.5px var(--mono); }
+.cover .dl .ico { width: 13px; height: 13px; color: var(--ok); }
+.cover .dl.run .ico { color: var(--accent); }
+.card.away .cover { filter: grayscale(.85) brightness(.55); }
+.card.away .cap { opacity: .55; }
+.update.away { background: color-mix(in srgb, var(--warn) 14%, var(--panel)); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
 .syncline { font: 400 12.5px var(--mono); color: var(--muted); }
 .syncline.bad { color: var(--bad); }
 .demo-note { font-size: 12.5px; color: var(--muted); border: 1px dashed var(--line); border-radius: 9px; padding: 8px 12px; align-self: flex-start; }
@@ -441,6 +447,9 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
     <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></symbol>
     <symbol id="i-loupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8M10.5 8v5M8 10.5h5"/></symbol>
     <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/></symbol>
+    <symbol id="i-offline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.5 9"/></symbol>
+    <symbol id="i-cloudoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M8.5 6.3A6 6 0 0 1 17.7 10 4 4 0 0 1 20 17M17 18H7a4.5 4.5 0 0 1-1.6-8.7"/></symbol>
   </defs>
 </svg>
 
@@ -514,6 +523,7 @@ const S = {
   books: [], byId: {}, trees: {}, progress: {}, route: { view: "home" }, stack: [],
   status: { scanning: false, found: 0, count: 0 }, online: true, filterKind: null, sort: store.get("sort", "name"),
   meta: {}, lists: { favorites: [], toread: [] }, visible: [],
+  offline: { done: {}, active: {}, totalBytes: 0, freeBytes: 0 },
 };
 
 /** Readable name for scene-style files and folders: "00   Docteur.Strange.Int09.Fr.CBR" → "Docteur Strange Int09 Fr". */
@@ -586,6 +596,69 @@ function progOf(b) {
 }
 const isDone = p => p && p.page >= p.pages - 1;
 const inList = (list, b) => versions(b).some(v => S.lists[list].includes(v.id));
+
+/* ---- offline copies ---- */
+const isSmb = b => b.path.startsWith("\\\\");
+/** The version of a book kept on this device, if any. */
+const offlineVersion = b => versions(b).find(v => S.offline.done[v.id] != null) || null;
+const dlJob = b => versions(b).map(v => S.offline.active[v.id]).find(Boolean) || null;
+/** Can it be opened right now? Away from the NAS only downloaded books can. */
+const reachable = b => S.status.nas !== false || !isSmb(b) || !!offlineVersion(b);
+function dlBadge(b) {
+  const j = dlJob(b);
+  if (j) return `<span class="dl run" data-dlp="${b.id}">${ico("download")}${j.state === "error" ? "Échec" : j.size ? Math.floor(100 * j.bytes / j.size) + " %" : "…"}</span>`;
+  return offlineVersion(b) ? `<span class="dl" title="Téléchargé sur cet appareil">${ico("offline")}</span>` : "";
+}
+function offlineBooks() {
+  const seen = new Set(), out = [];
+  for (const id of [...Object.keys(S.offline.active), ...Object.keys(S.offline.done)]) {
+    let b = S.byId[id]; if (!b) continue;
+    if (b.dupOf) b = S.byId[b.dupOf];
+    if (!seen.has(b.id)) { seen.add(b.id); out.push(b); }
+  }
+  return out;
+}
+async function loadOffline() {
+  if (!APP) return;
+  try { S.offline = await api("/api/offline"); } catch { }
+}
+/** Downloads the given books (one version each); returns once they are queued. */
+async function download(books) {
+  const ids = books.filter(b => !offlineVersion(b)).map(b => b.id);
+  if (!ids.length) return;
+  if (APP) S.offline = await post("/api/offline", ids);
+  else ids.forEach(id => { S.offline.active[id] = { state: "downloading", bytes: 0, size: S.byId[id].size }; });
+  toast(ids.length > 1 ? `${ids.length} livres en téléchargement` : "Téléchargement lancé");
+  watchDownloads();
+}
+async function removeDownloads(books) {
+  const ids = books.flatMap(versions).map(v => v.id).filter(id => S.offline.done[id] != null || S.offline.active[id]);
+  if (APP) S.offline = await post("/api/offline-remove", ids);
+  else ids.forEach(id => { delete S.offline.done[id]; delete S.offline.active[id]; });
+  toast(ids.length > 1 ? `${ids.length} téléchargements supprimés` : "Téléchargement supprimé");
+}
+let dlTimer = null;
+/** While downloads run: refresh the percentages, and the view when one finishes. */
+function watchDownloads() {
+  if (dlTimer) return;
+  dlTimer = setInterval(async () => {
+    const before = Object.keys(S.offline.done).length;
+    if (APP) await loadOffline();
+    else for (const [id, j] of Object.entries(S.offline.active)) {
+      j.bytes = Math.min(j.size, j.bytes + j.size * 0.18);
+      if (j.bytes >= j.size) { delete S.offline.active[id]; S.offline.done[id] = j.size; S.offline.totalBytes += j.size; }
+    }
+    for (const el of $$("[data-dlp]")) {
+      const b = S.byId[el.dataset.dlp], j = b && dlJob(b);
+      if (j) el.lastChild.textContent = j.state === "error" ? "Échec" : Math.floor(100 * j.bytes / Math.max(1, j.size)) + " %";
+    }
+    const running = Object.values(S.offline.active).some(j => j.state === "queued" || j.state === "downloading");
+    if (Object.keys(S.offline.done).length !== before || !running) {
+      if (!R.el) { const sh = $("#sheet"); if (sh) showSheet(sh.dataset.id); refresh(); } else renderRail();
+    }
+    if (!running) { clearInterval(dlTimer); dlTimer = null; }
+  }, 1500);
+}
 
 function mkNode(name, parent, path, kind) { return { name, label: cleanName(name), parent, path, kind, children: new Map(), books: [], count: 0, latest: 0 }; }
 function buildTrees() {
@@ -737,10 +810,11 @@ function bookCard(b, ctx) {
   const p = progOf(b);
   const pct = p ? Math.min(100, Math.round(100 * (p.page + 1) / Math.max(1, p.pages))) : 0;
   const done = isDone(p);
-  return `<div class="card book" role="button" tabindex="0" data-book="${b.id}" title="${esc(b.title)}">
+  return `<div class="card book${reachable(b) ? "" : " away"}" role="button" tabindex="0" data-book="${b.id}" title="${esc(b.title)}">
     <div class="cover">${coverImg(b)}<span class="fmt">${fmtLabel(b)}</span>
       ${done ? `<span class="done">Lu</span>` : p ? `<span class="bar"><i style="width:${pct}%"></i></span>` : ""}
       ${inList("favorites", b) ? `<svg class="fav"><use href="#i-heart-f"/></svg>` : ""}
+      ${dlBadge(b)}
       <button class="info" data-info="${b.id}" title="Fiche du livre">${ico("info")}</button></div>
     <div class="cap"><b>${esc(b.display)}</b><small>${b.issue ? `<span class="iss">${esc(b.issue)}</span> · ` : ""}${subLine(b, ctx)}</small></div>
   </div>`;
@@ -794,6 +868,7 @@ function renderRail() {
       <div class="nav-label">Mes listes</div>
       ${listBtn("favorites", "heart", "Favoris")}
       ${listBtn("toread", "bookmark", "À lire")}
+      ${APP || offlineBooks().length ? `<button class="${r.view === "list" && r.list === "offline" ? "on" : ""}" data-list="offline">${ico("download")}Téléchargés<span class="n">${fmtN(offlineBooks().length)}</span></button>` : ""}
     </nav>
     <div class="rail-foot">
       ${st.scanning ? `<div class="scanbox"><b><span class="led busy"></span>Scan de la NAS</b>${fmtN(st.found)} fichiers trouvés<div class="path"><bdi>${esc(st.current || "")}</bdi></div><div class="meter"><i></i></div></div>`
@@ -842,6 +917,12 @@ function render() {
 /** "New version" strip at the top of every view. */
 function renderBanner() {
   const el = $("#banner"); if (!el) return;
+  if (APP && S.status.nas === false && S.books.some(isSmb)) {
+    const n = offlineBooks().length;
+    el.innerHTML = `<div class="update away">${ico("cloudoff")}<b>NAS hors de portée</b><span>${n ? `Tu peux lire tes ${fmtN(n)} livre${n > 1 ? "s" : ""} téléchargé${n > 1 ? "s" : ""}. Le reste s'ouvrira de retour à la maison.` : "Aucun livre téléchargé sur cet appareil. Télécharge-en depuis leur fiche quand tu es à la maison."}</span>
+      ${n ? `<div class="btns"><button class="btn ghost" data-list="offline">${ico("download")}Voir les téléchargés</button></div>` : ""}</div>`;
+    return;
+  }
   const u = S.status.update;
   if (!u || u.state === "none" || !u.latest || store.get("skipVersion", null) === u.latest) { el.innerHTML = ""; return; }
   const ready = u.state === "ready";
@@ -998,6 +1079,11 @@ function renderBrowse(v, r) {
       ${nb ? `<span>${bytes(node.books.reduce((s, b) => s + b.size, 0))}</span>` : ""}</div>
     <div class="toolbar">
       ${unread ? `<button class="btn primary" data-book="${unread.id}">${ico("play")}${progOf(unread) ? "Reprendre" : "Lire"} ${esc(unread.display)}</button>` : ""}
+      ${APP || !ANDROID ? (() => {
+        const missing = all.filter(b => !offlineVersion(b));
+        if (!missing.length) return `<button class="btn ghost" data-act="series-offline" data-v="0">${ico("offline")}Téléchargé · Supprimer</button>`;
+        return `<button class="btn ghost" data-act="series-offline" data-v="1">${ico("download")}Télécharger ${nf ? "tout" : "la série"} (${missing.length} · ${bytes(missing.reduce((n, b) => n + b.size, 0))})</button>`;
+      })() : ""}
       <button class="btn ghost" data-act="series-read" data-v="${allDone ? 0 : 1}">${ico(allDone ? "undo" : "check")}${allDone ? "Marquer comme non lu" : `Marquer ${nf ? "tout" : "la série"} comme lu`}</button>
       <span class="spacer"></span>
       <button class="chip ${S.sort === "name" ? "on" : ""}" data-sort="name">A → Z</button>
@@ -1021,6 +1107,7 @@ function renderBrowse(v, r) {
 }
 
 function renderList(v, l) {
+  if (l === "offline") return renderOffline(v);
   const label = l === "favorites" ? "Favoris" : "À lire";
   const books = listBooks(l);
   v.insertAdjacentHTML("beforeend", `<section class="bhead"><div class="crumbbar">Mes listes</div><h1>${label}</h1>
@@ -1029,6 +1116,20 @@ function renderList(v, l) {
     v.insertAdjacentHTML("beforeend", `<div class="empty"><h2>Liste vide</h2><p>${l === "favorites"
       ? "Ouvre la fiche d'un livre (bouton ⓘ sur la couverture) ou fais un clic droit dessus, puis choisis « Ajouter aux favoris »."
       : "Garde ici ce que tu veux lire bientôt : clic droit sur un livre, puis « Ajouter à À lire »."}</p></div>`);
+    return;
+  }
+  const grid = document.createElement("div"); grid.className = "grid"; v.append(grid);
+  chunked(grid, books, b => bookCard(b), 150);
+}
+
+function renderOffline(v) {
+  const books = offlineBooks();
+  const o = S.offline;
+  v.insertAdjacentHTML("beforeend", `<section class="bhead"><div class="crumbbar">Mes listes</div><h1>Téléchargés</h1>
+    <div class="facts"><span>${fmtN(books.length)} titre${books.length > 1 ? "s" : ""}</span><span>${bytes(o.totalBytes || 0)} utilisés</span>${o.freeBytes ? `<span>${bytes(o.freeBytes)} libres</span>` : ""}</div>
+    ${books.length ? `<div class="toolbar"><span class="spacer"></span><button class="btn ghost" data-act="offline-clear">${ico("close")}Tout supprimer</button></div>` : ""}</section>`);
+  if (!books.length) {
+    v.insertAdjacentHTML("beforeend", `<div class="empty"><h2>Rien de téléchargé</h2><p>Pour lire loin de la NAS, ouvre la fiche d'un livre (bouton ⓘ) et touche « Télécharger », ou télécharge une série entière depuis son dossier.</p></div>`);
     return;
   }
   const grid = document.createElement("div"); grid.className = "grid"; v.append(grid);
@@ -1102,7 +1203,12 @@ function showSheet(id) {
   ].filter(r => r[1]);
   const fav = inList("favorites", b), later = inList("toread", b);
   const pct = p ? Math.round(100 * (p.page + 1) / p.pages) : 0;
-  const bg = document.createElement("div"); bg.className = "sheet-bg"; bg.id = "sheet";
+  const bg = document.createElement("div"); bg.className = "sheet-bg"; bg.id = "sheet"; bg.dataset.id = b.id;
+  const job = dlJob(b), off = offlineVersion(b);
+  const dlBtn = job && job.state !== "error"
+    ? `<button class="btn ghost" data-sheet="dl-cancel">${ico("download")}Téléchargement ${job.size ? Math.floor(100 * job.bytes / job.size) : 0} % · Annuler</button>`
+    : off ? `<button class="btn ghost toggle on" data-sheet="dl-remove">${ico("offline")}Sur l'appareil · Supprimer</button>`
+    : `<button class="btn ghost" data-sheet="dl">${ico("download")}Télécharger${job?.state === "error" ? " (réessayer)" : ""} · ${bytes(b.size)}</button>`;
   bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(b.display)}">
     <button class="iconbtn" data-sheet="close" title="Fermer (Échap)">${ico("close")}</button>
     <div><img class="cover-lg" alt="" data-cover="${b.id}"></div>
@@ -1115,6 +1221,7 @@ function showSheet(id) {
         <button class="btn primary" data-sheet="read">${ico("play")}${p && !isDone(p) ? "Continuer" : "Lire"}</button>
         <button class="btn ghost toggle ${fav ? "on" : ""}" data-sheet="fav">${ico(fav ? "heart-f" : "heart")}${fav ? "Favori" : "Ajouter aux favoris"}</button>
         <button class="btn ghost toggle ${later ? "on" : ""}" data-sheet="toread">${ico("bookmark")}${later ? "Dans « À lire »" : "À lire"}</button>
+        ${dlBtn}
       </div>
       ${m.summary ? `<p class="summary">${esc(m.summary)}</p>` : ""}
       <dl>${rows.map(([k, val]) => `<dt>${k}</dt><dd>${esc(val)}</dd>`).join("")}
@@ -1139,6 +1246,8 @@ function showSheet(id) {
     if (a === "reveal") return post(`/api/book/${b.id}/reveal`);
     if (a === "fav") toggleList("favorites", b);
     if (a === "toread") toggleList("toread", b);
+    if (a === "dl") await download([b]);
+    if (a === "dl-cancel" || a === "dl-remove") await removeDownloads([b]);
     if (a === "done") markRead([b], true);
     if (a === "unread") markRead([b], false);
     showSheet(b.id); refresh();
@@ -1173,6 +1282,9 @@ async function renderSettings(v) {
       <label class="check" style="align-self:flex-start"><input type="checkbox" id="sync" ${s.syncEnabled !== false ? "checked" : ""}><span>Synchroniser via la NAS</span></label>
       <input class="txt" id="syncdir" value="${esc(s.syncFolder || "")}" placeholder="${esc(data.syncFolder || "")}">
       <div class="row"><span class="syncline" id="syncline"></span><button class="btn ghost" id="syncNow">${ico("refresh")}Synchroniser maintenant</button></div></div>
+    <div class="field"><span class="lbl">Lecture hors ligne</span>
+      <p class="hint">${fmtN(offlineBooks().length)} livre${offlineBooks().length > 1 ? "s" : ""} téléchargé${offlineBooks().length > 1 ? "s" : ""} sur cet appareil · ${bytes(S.offline.totalBytes || 0)}${S.offline.freeBytes ? ` · ${bytes(S.offline.freeBytes)} libres` : ""}. Ils s'ouvrent même loin de la NAS ; ta progression est envoyée au retour.</p>
+      <div class="row"><button class="btn ghost" data-list="offline">${ico("download")}Voir les téléchargés</button></div></div>
     <div class="field"><span class="lbl">Mises à jour</span>
       <label class="check" style="align-self:flex-start"><input type="checkbox" id="autoup" ${s.autoUpdate !== false ? "checked" : ""}><span>Télécharger les nouvelles versions automatiquement</span></label>
       <div class="row"><span class="syncline" id="upline"></span><button class="btn ghost" id="upCheck">${ico("refresh")}Rechercher une mise à jour</button></div></div>
@@ -1244,6 +1356,7 @@ function bookMenu(b, x, y) {
     <button data-m="info">${ico("info")}Fiche du livre</button>
     <button data-m="fav">${ico(fav ? "heart-f" : "heart")}${fav ? "Retirer des favoris" : "Ajouter aux favoris"}</button>
     <button data-m="toread">${ico("bookmark")}${later ? "Retirer de « À lire »" : "Ajouter à « À lire »"}</button>
+    ${offlineVersion(b) || dlJob(b) ? `<button data-m="dl-remove">${ico("close")}Supprimer le téléchargement</button>` : `<button data-m="dl">${ico("download")}Télécharger sur l'appareil</button>`}
     ${p ? `<button data-m="reset">${ico("undo")}Marquer comme non lu</button>` : `<button data-m="done">${ico("check")}Marquer comme lu</button>`}
     <button data-m="series">${ico("folder")}Voir la série</button>
     ${DESKTOP ? `<button data-m="reveal">${ico("folder")}Afficher dans l'Explorateur</button><button data-m="ext">${ico("ext")}Ouvrir avec l'application Windows</button>` : ""}`;
@@ -1259,6 +1372,8 @@ function bookMenu(b, x, y) {
     if (a === "ext") post(`/api/book/${b.id}/external`);
     if (a === "fav") { toggleList("favorites", b); refresh(); }
     if (a === "toread") { toggleList("toread", b); refresh(); }
+    if (a === "dl") { await download([b]); refresh(); }
+    if (a === "dl-remove") { await removeDownloads([b]); refresh(); }
     if (a === "reset") { markRead([b], false); refresh(); }
     if (a === "done") { markRead([b], true); refresh(); }
   };
@@ -1368,7 +1483,11 @@ async function openBook(id, exact = false) {
     for (const v of versions(main)) { const p = S.progress[v.id]; if (p && (!best || p.updated > best.p.updated)) best = { v, p }; }
     b = best ? best.v : main;
   }
-  closeMenu(); $("#sheet")?.remove();
+  closeMenu();
+  if (!reachable(b)) return toast("Ce livre n'est pas téléchargé. Il s'ouvrira de retour à la maison.");
+  // Prefer the copy kept on the device when there is one.
+  if (!exact && S.status.nas === false) b = offlineVersion(b) || b;
+  $("#sheet")?.remove();
   if (b.fmt === "epub") return openEpub(b);
   const el = readerShell(b);
   if (b.fmt === "mobi" || b.fmt === "azw3") return readerError(`Le format ${b.fmt.toUpperCase()} (Kindle) ne s'affiche pas dans Nas Reader. Ouvre-le avec Calibre ou l'application Kindle.`, b);
@@ -1763,6 +1882,13 @@ document.addEventListener("click", e => {
   if (t.dataset.sort) { S.sort = t.dataset.sort; store.set("sort", S.sort); return render(); }
   if (t.dataset.kind != null) { S.filterKind = t.dataset.kind || null; return render(); }
   if (t.dataset.q) { $("#q").value = t.dataset.q; return go({ view: "search" }); }
+  if (t.dataset.act === "series-offline") {
+    const node = nodeAt(S.route.kind, S.route.path); if (!node) return;
+    const books = subtreeBooks(node);
+    (t.dataset.v === "1" ? download(books) : removeDownloads(books)).then(refresh);
+    return;
+  }
+  if (t.dataset.act === "offline-clear") { removeDownloads(offlineBooks()).then(refresh); return; }
   if (t.dataset.act === "update-install") {
     post("/api/update/install").then(() => toast(ANDROID ? "Ouverture de l'installateur Android" : "Installation de la mise à jour…")).catch(e => toast(e.message));
     return;
@@ -1824,6 +1950,7 @@ let lastSyncVersion = null;
 async function watch() {
   try {
     const st = await api("/api/status");
+    const wasAway = S.status.nas === false;
     const rescanned = st.scannedAt && st.scannedAt !== S.status.scannedAt && !st.scanning;
     S.status = { ...S.status, ...st };
     // A scan finished without the screen watching it (started from Settings or on another view).
@@ -1834,6 +1961,8 @@ async function watch() {
       if (!R.el && !$("#sheet") && S.route.view !== "settings") refresh(); else renderRail();
     }
     lastSyncVersion = v;
+    // Back home, or just left: the dimmed books change.
+    if (wasAway !== (st.nas === false) && !R.el && !$("#sheet")) refresh();
     renderBanner();
     if ((st.scanning || st.enriching) && !polling) pollStatus();
   } catch { }
@@ -1934,6 +2063,8 @@ async function boot() {
     const [, ud, st] = await Promise.all([loadLibrary(), api("/api/userdata"), api("/api/status")]);
     S.progress = ud.progress || {}; S.lists = { favorites: [], toread: [], ...ud.lists };
     S.status = { ...S.status, ...st }; S.online = !st.error;
+    await loadOffline();
+    if (Object.keys(S.offline.active).length) watchDownloads();
   } catch (e) { S.online = false; }
   api("/api/settings").then(d => { S.nas = d.settings.nas; renderRail(); }).catch(() => { });
   render();

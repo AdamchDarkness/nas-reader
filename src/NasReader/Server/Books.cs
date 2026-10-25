@@ -60,6 +60,13 @@ public static class Books
         };
     }
 
+    /// <summary>Closes a book's files, e.g. before deleting its downloaded copy.</summary>
+    public static void Forget(string id)
+    {
+        if (Open.TryRemove(id, out var lazy) && lazy.IsValueCreated && lazy.Value.IsCompletedSuccessfully)
+            lazy.Value.Result.Dispose();
+    }
+
     /// <summary>Reads the first pages of a book in the background so it opens instantly.</summary>
     public static void Prefetch(Book book)
     {
@@ -78,6 +85,7 @@ public static class Books
     /// <summary>The file as it is on the NAS, or the local copy when there is one.</summary>
     public static string Source(Book book)
     {
+        if (Offline.File_(book) is { } offline) return offline;
         var local = Path.Combine(Paths.Files, book.Id + "." + book.Fmt);
         var fi = new FileInfo(local);
         return fi.Exists && fi.Length == book.Size ? local : book.Path;
@@ -86,6 +94,7 @@ public static class Books
     /// <summary>EPUB and MOBI are handed to the reader as whole files, so they are copied first.</summary>
     public static async Task<string> EnsureLocalCopyAsync(Book book)
     {
+        if (Offline.File_(book) is { } offline) return offline;
         var local = Path.Combine(Paths.Files, book.Id + "." + book.Fmt);
         var fi = new FileInfo(local);
         if (fi.Exists && fi.Length == book.Size)
@@ -226,6 +235,7 @@ public class ArchiveBook : OpenBook
     List<string> _keys = [];
     TaskCompletionSource<string>[] _pages = [];
     IArchive? _random;
+    Stream? _randomStream;
     Dictionary<string, IArchiveEntry> _entries = new();
     readonly object _randomLock = new();
     readonly CancellationTokenSource _cts = new();
@@ -273,6 +283,7 @@ public class ArchiveBook : OpenBook
         else
         {
             ab._random = archive;
+            ab._randomStream = fs;
             ab._entries = images.ToDictionary(e => e.Key!, e => e);
         }
         _ = Task.Run(ab.ExtractAll);
@@ -361,7 +372,7 @@ public class ArchiveBook : OpenBook
     public override void Dispose()
     {
         _cts.Cancel();
-        lock (_randomLock) { _random?.Dispose(); _random = null; }
+        lock (_randomLock) { _random?.Dispose(); _random = null; _randomStream?.Dispose(); _randomStream = null; }
     }
 }
 

@@ -29,6 +29,7 @@ Dernière version : **[Releases](https://github.com/AdamchDarkness/nas-reader/re
   Sur Android : glisser pour tourner les pages, pincer pour zoomer.
 - **Progression, favoris, liste « À lire », « À suivre »**, séries marquées comme lues.
 - **Synchronisation** entre le PC, le téléphone et la tablette, via un fichier sur la NAS.
+- **Lecture hors ligne** : télécharge un livre ou une série entière sur l'appareil pour la lire loin de la NAS.
 - **Mises à jour automatiques** depuis les releases GitHub.
 
 ## Installer
@@ -61,6 +62,16 @@ La progression, les favoris et la liste « À lire » sont enregistrés dans
 
 Un livre a le même identifiant sur tous les appareils (il est calculé à partir de son chemin sur la NAS). Si un
 fichier est déplacé ou renommé, sa progression le suit au scan suivant grâce à sa taille, sa date et son nom.
+
+## Lecture hors ligne
+
+Dans la fiche d'un livre (bouton ⓘ) ou par un clic droit (appui long sur Android), choisis **Télécharger**.
+Le bouton « Télécharger la série » d'un dossier prend tous ses numéros d'un coup. Les livres téléchargés
+portent un petit badge ✓ et se retrouvent dans **Téléchargés**, avec la place utilisée et la place libre.
+
+Loin de la NAS, un bandeau le signale : les livres téléchargés s'ouvrent normalement, les autres sont grisés.
+La progression est envoyée à la NAS au retour. Les fichiers sont gardés dans l'espace de l'appli
+(`%LOCALAPPDATA%\NasReader\offline` sur Windows) et sont supprimés avec elle.
 
 ## Mises à jour
 

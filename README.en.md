@@ -31,6 +31,7 @@ Latest version: **[Releases](https://github.com/AdamchDarkness/nas-reader/releas
   On Android: swipe to turn pages, pinch to zoom.
 - **Progress, favorites, "to read" list, "up next"**, series marked as read.
 - **Sync** between the PC, the phone and the tablet, through a file on the NAS.
+- **Offline reading**: download a book or a whole series to the device to read it away from the NAS.
 - **Automatic updates** from the GitHub releases.
 
 ## Install
@@ -62,6 +63,16 @@ after each reading session: for each book, the most recent change wins, includin
 
 A book has the same id on every device (it is computed from its path on the NAS). When a file is moved or renamed,
 its progress follows it on the next scan, matched by size, date and name.
+
+## Offline reading
+
+In a book's details (ⓘ button) or with a right-click (long press on Android), choose **Télécharger** (Download).
+A folder's "Télécharger la série" button takes every issue at once. Downloaded books carry a small ✓ badge and
+are listed under **Téléchargés** (Downloads), with the space used and the space left.
+
+Away from the NAS, a banner says so: downloaded books open as usual, the others are greyed out. Progress is
+sent to the NAS once back home. The files live in the app's own storage
+(`%LOCALAPPDATA%\NasReader\offline` on Windows) and are removed with it.
 
 ## Updates
 

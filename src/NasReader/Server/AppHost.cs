@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -100,7 +100,12 @@ public class AppHost
             enrichTotal = Enricher.Total,
             sync = new { enabled = Settings.Current.SyncEnabled, folder = Sync.Folder(Settings.Current), last = Sync.LastSync, error = Sync.LastError, version = Sync.Version },
             update = Updater.Status(),
+            nas = Reach.Nas(),
         }));
+
+        app.MapGet("/api/offline", () => Results.Json(Offline.Status()));
+        app.MapPost("/api/offline", (List<string> ids) => { Offline.Enqueue(ids); return Results.Json(Offline.Status()); });
+        app.MapPost("/api/offline-remove", (List<string> ids) => { Offline.Remove(ids); return Results.Json(Offline.Status()); });
 
         app.MapPost("/api/sync", async () => { await Sync.RunAsync(); return Results.Json(new { last = Sync.LastSync, error = Sync.LastError, version = Sync.Version }); });
         app.MapGet("/api/update", () => Results.Json(Updater.Status()));
@@ -151,6 +156,8 @@ public class AppHost
         {
             var book = Library.Get(id);
             if (book == null) return Results.NotFound();
+            if (Offline.File_(book) == null && !Reach.Nas())
+                return Results.Json(new { error = "Ce livre n'est pas téléchargé sur ce PC et la NAS n'est pas joignable. Il s'ouvrira de retour à la maison." }, statusCode: 503);
             try
             {
                 var ob = await Books.OpenAsync(book);
