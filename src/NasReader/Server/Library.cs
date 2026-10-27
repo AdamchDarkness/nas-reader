@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -151,6 +151,7 @@ public static class Library
         }
         Json.Save(Paths.LibraryFile, snapshot);
         UserData.Reconcile(found);
+        SharedCache.PushLibrary();
         Enricher.Restart();
     }
 

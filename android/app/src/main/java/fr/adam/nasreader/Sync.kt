@@ -62,7 +62,7 @@ object Sync {
 
         fun write(dir: String, name: String, bytes: ByteArray) {
             if (Fs.isSmb(dir)) {
-                Smb.writeSmall(dir, name, bytes, "userdata.${Build.MODEL.replace(Regex("[^A-Za-z0-9]"), "")}.tmp")
+                Smb.writeSmall(dir, name, bytes, "$name.${Build.MODEL.replace(Regex("[^A-Za-z0-9]"), "")}.tmp")
             } else {
                 File(dir).mkdirs()
                 val tmp = File(dir, "$name.tmp")

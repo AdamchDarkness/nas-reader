@@ -63,6 +63,22 @@ La progression, les favoris et la liste « À lire » sont enregistrés dans
 Un livre a le même identifiant sur tous les appareils (il est calculé à partir de son chemin sur la NAS). Si un
 fichier est déplacé ou renommé, sa progression le suit au scan suivant grâce à sa taille, sa date et son nom.
 
+## Couvertures et liste partagées
+
+Le PC fait le gros du travail une seule fois et le dépose sur la NAS, dans
+`\\lord_of_adam\Comics Mangas Livre\.nasreader` :
+
+| Fichier | Contenu |
+|---|---|
+| `library.json` | La liste des livres, après chaque scan du PC |
+| `covers\` | Une couverture par livre (environ 60 Ko chacune) |
+| `meta.json` | Les fiches lues dans ComicInfo et les EPUB |
+| `userdata.json` | Progression, favoris, « À lire » (synchronisation) |
+
+Le téléphone et la tablette reprennent ces fichiers au lieu de parcourir la NAS et d'ouvrir chaque comic par le
+Wi-Fi. Quand un nouveau fichier arrive sur la NAS, le PC fait sa couverture au scan suivant et l'y dépose aussi.
+Pendant la lecture, les appareils Android ne font plus rien en arrière-plan.
+
 ## Lecture hors ligne
 
 Dans la fiche d'un livre (bouton ⓘ) ou par un clic droit (appui long sur Android), choisis **Télécharger**.

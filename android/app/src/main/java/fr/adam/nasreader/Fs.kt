@@ -247,6 +247,24 @@ class CachedFile(private val inner: RandomFile, private val block: Int = 256 * 1
     override fun close() = inner.close()
 }
 
+/** Counts what is read through it: used to log how much a book costs to open. */
+class CountingFile(private val inner: RandomFile) : RandomFile by inner {
+    @Volatile var bytes = 0L
+    @Volatile var calls = 0
+    override fun read(pos: Long, buf: ByteArray, off: Int, len: Int): Int =
+        inner.read(pos, buf, off, len).also { if (it > 0) { bytes += it; calls++ } }
+    override fun readFully(pos: Long, buf: ByteArray, off: Int, len: Int): Int {
+        var total = 0
+        while (total < len) {
+            val n = read(pos + total, buf, off + total, len - total)
+            if (n <= 0) break
+            total += n
+        }
+        return total
+    }
+    override fun close() = inner.close()
+}
+
 /** Reads a RandomFile from start to end in big chunks. */
 class SeqStream(private val rf: RandomFile, private var pos: Long = 0) : InputStream() {
     override fun read(): Int {

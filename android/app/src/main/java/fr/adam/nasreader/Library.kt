@@ -64,6 +64,30 @@ object Library {
 
     fun get(id: String): Book? = byId[id]
 
+    /**
+     * Uses the list of books the PC put on the NAS after its own scan: one small file instead
+     * of walking every folder over Wi-Fi. Returns true when it was taken.
+     */
+    fun adoptShared(maxAgeDays: Int = 7): Boolean {
+        val st = Settings.current
+        if (!st.syncEnabled || st.roots.isNotEmpty()) return false
+        return runCatching {
+            val bytes = Sync.Store.read(st.syncPath(), "library.json") ?: return false
+            val o = JSONObject(String(bytes))
+            val at = o.optLong("scannedAt")
+            if (at <= scannedAt || System.currentTimeMillis() - at > maxAgeDays * 86_400_000L) return at > 0 && at <= scannedAt
+            val a = o.getJSONArray("books")
+            val list = List(a.length()) { Book.from(a.getJSONObject(it)) }
+            if (list.isEmpty()) return false
+            books = list
+            byId = list.associateBy { it.id }
+            scannedAt = at
+            Json.save("library.json", String(bytes))
+            UserData.reconcile(list)
+            true
+        }.getOrDefault(false)
+    }
+
     /** Same id as the Windows app: SHA-1 of the lower-cased path, first 8 bytes in hex. */
     fun idFor(path: String): String {
         val h = MessageDigest.getInstance("SHA-1").digest(path.lowercase(Locale.ROOT).toByteArray())

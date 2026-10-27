@@ -87,6 +87,30 @@ class ArchiveReader(private val rf: RandomFile, chunk: Int = 256 * 1024) : Close
 }
 
 object Pages {
+    /**
+     * The page at the width the screen needs (cached next to the original): a phone does not
+     * need 3000-pixel scans, and thumbnails need a few hundred pixels.
+     */
+    fun fit(f: java.io.File, w: Int): java.io.File {
+        if (w <= 0) return f
+        val out = java.io.File(f.parentFile, "${f.nameWithoutExtension}_w$w.jpg")
+        if (out.exists()) return out
+        val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        android.graphics.BitmapFactory.decodeFile(f.path, o)
+        if (o.outWidth <= 0 || o.outWidth <= w * 1.15) return f
+        var sample = 1
+        while (o.outWidth / (sample * 2) >= w) sample *= 2
+        val src = android.graphics.BitmapFactory.decodeFile(f.path, android.graphics.BitmapFactory.Options().apply { inSampleSize = sample }) ?: return f
+        val h = maxOf(1, (src.height.toLong() * w / src.width).toInt())
+        val scaled = if (src.width <= w) src else android.graphics.Bitmap.createScaledBitmap(src, w, h, true)
+        val tmp = java.io.File(f.parentFile, "${out.name}.${Thread.currentThread().id}.tmp")
+        tmp.outputStream().use { scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, if (w <= 400) 78 else 86, it) }
+        if (scaled !== src) scaled.recycle()
+        src.recycle()
+        if (!tmp.renameTo(out)) tmp.delete()
+        return if (out.exists()) out else f
+    }
+
     private val imageExt = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "avif")
 
     fun isPage(name: String): Boolean {

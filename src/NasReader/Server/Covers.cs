@@ -46,6 +46,12 @@ public static class Covers
         try
         {
             if (!needCover && !needMeta) return;
+            // Already made by another device: a small copy instead of opening the comic.
+            if (needCover && SharedCache.TryFetchCover(book.Id, CoverPath(book)))
+            {
+                needCover = false;
+                if (!needMeta) return;
+            }
             var source = Books.Source(book);
             var (jpeg, meta) = book.Fmt switch
             {
@@ -59,6 +65,7 @@ public static class Covers
             {
                 if (jpeg == null) throw new InvalidDataException("no cover");
                 await File.WriteAllBytesAsync(CoverPath(book), jpeg);
+                SharedCache.PublishCover(book.Id, CoverPath(book));
             }
         }
         catch (Exception ex)
@@ -292,7 +299,7 @@ public static class Enricher
         Running = books.Count > 0;
         try
         {
-            await Parallel.ForEachAsync(books, new ParallelOptions { MaxDegreeOfParallelism = 2, CancellationToken = ct }, async (b, c) =>
+            await Parallel.ForEachAsync(books, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct }, async (b, c) =>
             {
                 while (Books.Busy) await Task.Delay(400, c);
                 try { await Covers.EnsureAsync(b); } catch { }
@@ -304,6 +311,8 @@ public static class Enricher
         {
             if (!ct.IsCancellationRequested) Running = false;
             MetaStore.Flush();
+            // New books found by this scan: their details go to the NAS for the other devices.
+            if (books.Count > 0) SharedCache.PushMeta();
         }
     }
 }

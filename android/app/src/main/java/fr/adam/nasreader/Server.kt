@@ -101,10 +101,12 @@ class Server : NanoHTTPD("127.0.0.1", 0) {
                 json(JSONObject().put("pages", ob.count).put("fmt", b.fmt))
             }
             "page" -> {
+                Books.reading()
                 val ob = Books.get(b)
                 val n = p.getOrNull(4)?.toIntOrNull() ?: return notFound()
                 if (n < 0 || n >= ob.count) return notFound()
-                val f = ob.page(n)
+                val w = s.parameters["w"]?.firstOrNull()?.toIntOrNull() ?: 0
+                val f = Pages.fit(ob.page(n), w)
                 file(f, Pages.mime(f.name), cache = true)
             }
             "prefetch" -> { Books.prefetch(b); ok() }

@@ -51,7 +51,15 @@ object Covers {
             val needMeta = needsMeta(b)
             try {
                 if (!needCover && !needMeta) return
-                val (jpeg, meta) = Books.openFile(b).use { raw ->
+                // Already made by the PC or another device: a small copy instead of opening the comic.
+                if (needCover && SharedCache.fetchCover(b.id, coverFile(b))) {
+                    // The device that made it already read the details; empty ones are not shared.
+                    if (needMeta) MetaStore.set(b.id, JSONObject(), overwrite = false)
+                    return
+                }
+                val t0 = System.currentTimeMillis()
+                val counter = CountingFile(Books.openFile(b))
+                val (jpeg, meta) = counter.use { raw ->
                     CachedFile(raw).use { rf ->
                         when (b.fmt) {
                             "cbz", "cbr", "cb7" -> fromArchive(rf, needCover)
@@ -61,10 +69,12 @@ object Covers {
                         }
                     }
                 }
+                android.util.Log.i("NasReader", "cover ${b.fmt} ${b.size / 1024} KB: read ${counter.bytes / 1024} KB in ${counter.calls} calls, ${System.currentTimeMillis() - t0} ms")
                 if (needMeta) MetaStore.set(b.id, meta ?: JSONObject(), overwrite = false)
                 if (needCover) {
                     if (jpeg == null) throw IllegalStateException("no cover")
                     coverFile(b).writeBytes(jpeg)
+                    SharedCache.publishCover(b.id, coverFile(b))
                 }
             } catch (e: Exception) {
                 if (needCover) runCatching { failFile(b).writeText(e.toString()) }
@@ -236,7 +246,7 @@ object Covers {
 
 /** After each scan, prepares covers and details for the whole library in the background. */
 object Enricher {
-    private val pool = Executors.newFixedThreadPool(2)
+    private val pool = Executors.newFixedThreadPool(3)
     private var job: List<Future<*>> = emptyList()
     private val generation = AtomicInteger()
     val done = AtomicInteger()
@@ -247,7 +257,12 @@ object Enricher {
     fun restart() {
         val gen = generation.incrementAndGet()
         job.forEach { it.cancel(false) }
-        val books = Library.books.filter { Covers.needsWork(it) }
+        // On a phone, opening every comic over Wi-Fi would take hours and slow down reading:
+        // in the background only the covers already on the NAS are fetched. The others are
+        // made when they appear on screen.
+        SharedCache.pullMeta()
+        val shared = SharedCache.remote()
+        val books = Library.books.filter { Covers.needsWork(it) && (it.id in shared || !Fs.isSmb(it.path)) }
             .sortedWith(compareBy<Book>({ if (it.sorted) 0 else 1 }, { if (it.kind == "comic" || it.kind == "manga") 0 else 1 }, { it.path.lowercase() }))
         done.set(0)
         total = books.size
@@ -256,7 +271,7 @@ object Enricher {
         job = books.map { b ->
             pool.submit {
                 if (generation.get() != gen) return@submit
-                while (Books.isBusy) Thread.sleep(400)
+                while (Books.isBusy || Books.isReading) Thread.sleep(500)
                 runCatching { Covers.ensure(b) }
                 done.incrementAndGet()
                 if (left.decrementAndGet() == 0) { running = false; MetaStore.flush() }

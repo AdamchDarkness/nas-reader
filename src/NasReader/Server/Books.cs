@@ -189,6 +189,24 @@ public static class Books
     public static string NaturalKey(string s) =>
         Digits.Replace(s.Replace('\\', '/').ToLowerInvariant(), m => m.Value.PadLeft(10, '0'));
 
+    /// <summary>The page at a given width (thumbnails), cached next to the original.</summary>
+    public static async Task<(string, string)> FitAsync(string path, string mime, int width)
+    {
+        var dir = Path.GetDirectoryName(path)!;
+        var output = Path.Combine(dir, $"{Path.GetFileNameWithoutExtension(path)}_w{width}.jpg");
+        if (File.Exists(output)) return (output, "image/jpeg");
+        try
+        {
+            await using var fs = File.OpenRead(path);
+            var bytes = await ResizeToJpegAsync(fs, (uint)width);
+            var tmp = output + "." + Environment.CurrentManagedThreadId + ".tmp";
+            await File.WriteAllBytesAsync(tmp, bytes);
+            File.Move(tmp, output, true);
+            return (output, "image/jpeg");
+        }
+        catch { return (path, mime); }
+    }
+
     public static async Task<byte[]> ResizeToJpegAsync(Stream input, uint width)
     {
         using var ras = new InMemoryRandomAccessStream();

@@ -64,6 +64,22 @@ after each reading session: for each book, the most recent change wins, includin
 A book has the same id on every device (it is computed from its path on the NAS). When a file is moved or renamed,
 its progress follows it on the next scan, matched by size, date and name.
 
+## Shared covers and list
+
+The PC does the heavy work once and leaves it on the NAS, in
+`\\lord_of_adam\Comics Mangas Livre\.nasreader`:
+
+| File | Content |
+|---|---|
+| `library.json` | The list of books, after each scan made by the PC |
+| `covers\` | One cover per book (about 60 KB each) |
+| `meta.json` | Details read from ComicInfo and EPUB files |
+| `userdata.json` | Progress, favorites, "to read" (sync) |
+
+Phones and tablets take these files instead of walking the NAS and opening every comic over Wi-Fi. When a new
+file lands on the NAS, the PC makes its cover on its next scan and puts it there too. While you read, the
+Android app does no background work.
+
 ## Offline reading
 
 In a book's details (ⓘ button) or with a right-click (long press on Android), choose **Télécharger** (Download).

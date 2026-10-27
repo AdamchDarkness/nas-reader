@@ -36,6 +36,11 @@ object Books {
 
     /** True while a book is being read from the NAS; background work waits for it. */
     val isBusy get() = busy.get() > 0
+
+    /** A page was asked in the last 30 seconds: someone is reading, keep the Wi-Fi for them. */
+    @Volatile private var lastPage = 0L
+    val isReading get() = System.currentTimeMillis() - lastPage < 30_000
+    fun reading() { lastPage = System.currentTimeMillis() }
     fun <T> io(block: () -> T): T {
         busy.incrementAndGet()
         try { return block() } finally { busy.decrementAndGet() }
@@ -165,9 +170,12 @@ class ArchiveBook(book: Book, private val dir: File) : OpenBook(book) {
             count = cached.size
             seqIndex = Int.MAX_VALUE
         } else {
+            val t0 = System.currentTimeMillis()
+            val counter = CountingFile(Books.openFile(book))
             keys = Books.io {
-                CachedFile(Books.openFile(book)).use { rf ->
-                    ArchiveReader(rf).use { ar ->
+                // Listing only reads the small entry headers spread through the file: small blocks.
+                CachedFile(counter, 32 * 1024, 128).use { rf ->
+                    ArchiveReader(rf, 32 * 1024).use { ar ->
                         val names = ArrayList<String>()
                         while (true) {
                             val e = ar.next() ?: break
@@ -178,6 +186,7 @@ class ArchiveBook(book: Book, private val dir: File) : OpenBook(book) {
                     }
                 }
             }
+            android.util.Log.i("NasReader", "list ${book.fmt} ${book.size / 1024} KB: read ${counter.bytes / 1024} KB in ${counter.calls} calls, ${System.currentTimeMillis() - t0} ms")
             if (keys.isEmpty()) throw IOException("Aucune image trouvée dans cette archive.")
             count = keys.size
             futures = Array(keys.size) { CompletableFuture<File>() }

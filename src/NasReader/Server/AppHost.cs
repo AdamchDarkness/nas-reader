@@ -37,6 +37,7 @@ public class AppHost
 
         if (Library.Snapshot.Books.Count > 0) Enricher.Restart();
         Sync.Start();
+        SharedCache.Start();
         Updater.Start();
         if (Settings.Current.ScanOnStartup || Library.Snapshot.Books.Count == 0) Library.StartScan();
         return host;
@@ -101,6 +102,7 @@ public class AppHost
             sync = new { enabled = Settings.Current.SyncEnabled, folder = Sync.Folder(Settings.Current), last = Sync.LastSync, error = Sync.LastError, version = Sync.Version },
             update = Updater.Status(),
             nas = Reach.Nas(),
+            shared = new { uploaded = SharedCache.Uploaded, pending = SharedCache.Pending },
         }));
 
         app.MapGet("/api/offline", () => Results.Json(Offline.Status()));
@@ -178,6 +180,8 @@ public class AppHost
                 var ob = await Books.OpenAsync(book);
                 if (n < 0 || n >= ob.Count) return Results.NotFound();
                 var (path, mime) = await ob.GetPageAsync(n, ctx.RequestAborted);
+                if (int.TryParse(ctx.Request.Query["w"], out var w) && w > 0)
+                    (path, mime) = await Books.FitAsync(path, mime, w);
                 ctx.Response.Headers.CacheControl = "public, max-age=604800";
                 return Results.File(path, mime);
             }

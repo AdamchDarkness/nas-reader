@@ -1,4 +1,4 @@
-﻿package fr.adam.nasreader
+package fr.adam.nasreader
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -28,8 +28,12 @@ class MainActivity : Activity() {
         fun server(): Server = server ?: Server().also {
             it.start(60_000, true)
             server = it
-            if (Settings.current.scanOnStartup || Library.books.isEmpty()) Library.startScan()
-            if (Library.books.isNotEmpty()) Enricher.restart()
+            Thread {
+                // The PC's scan, shared on the NAS, is much faster than scanning from the phone.
+                val shared = Library.adoptShared()
+                if (!shared && (Settings.current.scanOnStartup || Library.books.isEmpty())) Library.startScan()
+                else if (Library.books.isNotEmpty()) Enricher.restart()
+            }.start()
             Sync.start()
             Updater.start()
         }
