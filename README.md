@@ -22,13 +22,21 @@ Dernière version : **[Releases](https://github.com/AdamchDarkness/nas-reader/re
 - **Classement automatique** d'après les dossiers : un dossier `Comics`, `Mangas`, `Ebooks` ou `Magazines` donne la
   catégorie, puis les sous-dossiers deviennent éditeur → personnage → série
   (`Comics\Marvel\Spider-Man\Amazing Spider-Man`).
-- **Recherche** dans les titres, séries, auteurs, dessinateurs et numéros (`#666`).
+- **Webtoons** : un dossier `Webtoons` (ou `Manhwa`) s'ouvre en bande verticale continue.
+- **Recherche tolérante** dans les titres, séries, auteurs, dessinateurs, résumés et numéros (`#666`) : `batmn`
+  trouve Batman. Filtres combinés (type, lu / non lu, téléchargé, format, éditeur) et recherches récentes.
+- **Vue chronologique** par décennie et par année, et **numéros manquants** signalés dans chaque série.
 - **Fiches** lues dans `ComicInfo.xml` (CBZ/CBR) et dans les métadonnées EPUB : résumé, scénario, dessin, année.
 - **Doublons regroupés** : un même livre en CBR et en PDF n'apparaît qu'une fois, avec les deux versions.
-- **Lecteur** : page simple, double page, défilement vertical, sens manga, zoom, loupe, miniatures, plein écran.
-  Sur Android : glisser pour tourner les pages, pincer pour zoomer.
+- **Lecteur** : page simple, double page, défilement vertical, mode webtoon, sens manga, zoom, loupe, miniatures,
+  plein écran. Le sens manga est retenu par série et pris dans ComicInfo. À la dernière page, le numéro suivant
+  s'ouvre après 8 secondes. N'importe quelle page peut devenir la couverture du livre.
+  Sur Android : glisser pour tourner les pages, pincer pour zoomer, orientation bloquée par série.
 - **Progression, favoris, liste « À lire », « À suivre »**, séries marquées comme lues.
 - **Synchronisation** entre le PC, le téléphone et la tablette, via un fichier sur la NAS.
+- **Profils** : chacun sa progression, ses listes et ses statistiques (« Qui lit ? » au démarrage).
+- **Statistiques** : pages, temps de lecture, jours d'affilée, séries et auteurs préférés, et **bilan de l'année**.
+- **Accueil personnalisable** (rangées et ordre), **interface en anglais**, **rapport de bug** à copier ou partager.
 - **Lecture hors ligne** : télécharge un livre ou une série entière sur l'appareil pour la lire loin de la NAS.
 - **Mises à jour automatiques** depuis les releases GitHub.
 
@@ -70,7 +78,7 @@ Le PC fait le gros du travail une seule fois et le dépose sur la NAS, dans
 
 | Fichier | Contenu |
 |---|---|
-| `library.json` | La liste des livres, après chaque scan du PC |
+| `library.json` | La liste des livres, après chaque scan du PC (ou du service Synology) |
 | `covers\` | Une couverture par livre (environ 60 Ko chacune) |
 | `meta.json` | Les fiches lues dans ComicInfo et les EPUB |
 | `userdata.json` | Progression, favoris, « À lire » (synchronisation) |
@@ -78,6 +86,26 @@ Le PC fait le gros du travail une seule fois et le dépose sur la NAS, dans
 Le téléphone et la tablette reprennent ces fichiers au lieu de parcourir la NAS et d'ouvrir chaque comic par le
 Wi-Fi. Quand un nouveau fichier arrive sur la NAS, le PC fait sa couverture au scan suivant et l'y dépose aussi.
 Pendant la lecture, les appareils Android ne font plus rien en arrière-plan.
+
+## Petit service sur la Synology (facultatif)
+
+[`nas/nasreader-service.py`](nas/nasreader-service.py) fait le scan **directement sur la NAS**, en lisant ses
+disques au lieu de passer par le réseau, et dépose `library.json` dans `.nasreader`. Les appareils reprennent
+cette liste au démarrage au lieu de parcourir les dossiers. Le service ne demande que le Python 3 livré avec
+DSM 7 (pas de Docker, pas de paquet), relit les dossiers toutes les 30 minutes et ne réécrit la liste que si un
+fichier a changé. Il ne modifie rien d'autre.
+
+1. Copie `nasreader-service.py` dans `\\lord_of_adam\Comics Mangas Livre\.nasreader\`.
+2. DSM → Panneau de configuration → Planificateur de tâches → Créer → Tâche déclenchée → Script défini par
+   l'utilisateur. Événement : **Démarrage**. Utilisateur : `root` (ou un compte qui lit tous les dossiers partagés).
+3. Script :
+   ```
+   python3 "/volume1/Comics Mangas Livre/.nasreader/nasreader-service.py" --nas lord_of_adam
+   ```
+4. Clic droit sur la tâche → **Exécuter** pour la lancer sans redémarrer.
+
+`--nas` doit être le nom tapé sur le PC (`\\lord_of_adam`) : les identifiants des livres en dépendent.
+`--share /volume1/Comics` limite le scan à certains dossiers, `--every 60` change l'intervalle.
 
 ## Lecture hors ligne
 
@@ -105,6 +133,7 @@ Les mises à jour automatiques se désactivent dans Réglages → Mises à jour.
 |---|---|
 | ← → / Espace | Page précédente / suivante |
 | S / D / W | Simple / double page / défilement vertical |
+| B | Mode webtoon (bande sans espace) |
 | Z | Ajuster à la hauteur ↔ à la largeur |
 | R | Sens manga (droite → gauche) |
 | T | Miniatures |
@@ -114,12 +143,20 @@ Les mises à jour automatiques se désactivent dans Réglages → Mises à jour.
 | Échap | Fermer |
 | Ctrl K ou / | Rechercher |
 
-## Fichiers locaux
+## Ce qui est gardé sur l'appareil
 
-- Windows : `%LOCALAPPDATA%\NasReader` (bibliothèque, progression, couvertures, cache de lecture).
-- Android : stockage privé de l'appli.
+Les comics restent sur la NAS : ils ne sont **jamais copiés en entier** sur le PC ou la tablette, sauf ceux
+que tu télécharges pour la lecture hors ligne. L'appareil garde seulement de quoi aller vite :
 
-Désinstaller l'appli garde ces données. La copie partagée de la progression reste sur la NAS.
+| Quoi | Taille | Réglage |
+|---|---|---|
+| Cache de lecture (pages des livres ouverts récemment) | limité, 8 Go par défaut | Réglages → Cache de lecture, **0** = rien gardé |
+| Couvertures (petites images) | environ 60 Ko par livre | bouton « Vider », elles reviennent de la NAS |
+| Téléchargements hors ligne | ce que tu choisis | Téléchargés → Tout supprimer |
+| Liste, fiches, progression, réglages, journal | quelques Mo | — |
+
+Réglages → **Stockage sur cet appareil** affiche la place prise par chacun.
+Windows : `%LOCALAPPDATA%\NasReader`. Android : stockage privé de l'appli, effacé à la désinstallation.
 
 ## Compiler depuis les sources
 
@@ -140,6 +177,7 @@ Android n'accepte une mise à jour que si elle est signée avec la même clé.
 | `src/NasReader/` | Appli Windows : C# .NET 10, WinForms + WebView2, serveur local ASP.NET Core |
 | `src/NasReader/wwwroot/index.html` | L'interface, **partagée** par Windows et Android |
 | `android/` | Appli Android : Kotlin, WebView + serveur local NanoHTTPD |
+| `nas/nasreader-service.py` | Service facultatif de la Synology (Python 3, sans dépendance) |
 | `installer/NasReader.iss` | Script de l'installateur Windows (Inno Setup) |
 | `release.ps1` | Construction et publication des releases |
 

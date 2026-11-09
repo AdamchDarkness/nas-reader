@@ -41,8 +41,8 @@ object SharedCache {
     }
 
     /** A cover made here goes to the NAS too, for the other devices. */
-    fun publishCover(id: String, local: File) {
-        if (!enabled || id in remote()) return
+    fun publishCover(id: String, local: File, force: Boolean = false) {
+        if (!enabled || (!force && id in remote())) return
         runCatching {
             Sync.Store.write(coversDir(), "$id.jpg", local.readBytes())
             synchronized(this) { remote?.add(id) }

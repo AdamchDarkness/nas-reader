@@ -14,6 +14,8 @@ public static class Paths
     public static string ProgressFile => Path.Combine(Root, "progress.json");
     public static string ListsFile => Path.Combine(Root, "lists.json");
     public static string MetaFile => Path.Combine(Root, "meta.json");
+    public static string KvFile => Path.Combine(Root, "kv.json");
+    public static string LogFile => Path.Combine(Root, "log.txt");
 
     public static void Ensure()
     {
@@ -80,6 +82,8 @@ public record Mark(long Added, long Size = 0, long Mtime = 0, string? Name = nul
     [JsonIgnore] public long Stamp => Math.Max(Added, Removed);
 }
 public record ProgressItem(string Id, int Page, int Pages);
+/// <summary>A small dated value shared between devices (profiles, reading log, chosen covers). Null value = deleted.</summary>
+public record KvEntry(JsonElement? Value, long Updated);
 
 /// <summary>The shared file on the NAS: everything, markers included.</summary>
 public class UserDataFile
@@ -87,6 +91,7 @@ public class UserDataFile
     public int Version { get; set; } = 1;
     public Dictionary<string, Progress> Progress { get; set; } = new();
     public Dictionary<string, Dictionary<string, Mark>> Lists { get; set; } = new();
+    public Dictionary<string, KvEntry> Kv { get; set; } = new();
 }
 
 public static class UserData
@@ -96,6 +101,7 @@ public static class UserData
     static readonly object Gate = new();
     static readonly Dictionary<string, Progress> _progress = Json.Load<Dictionary<string, Progress>>(Paths.ProgressFile) ?? new();
     static readonly Dictionary<string, Dictionary<string, Mark>> _lists = LoadLists();
+    static readonly Dictionary<string, KvEntry> _kv = Json.Load<Dictionary<string, KvEntry>>(Paths.KvFile) ?? new();
     static long Now => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
     static Dictionary<string, Dictionary<string, Mark>> LoadLists()
@@ -111,12 +117,29 @@ public static class UserData
         {
             progress = _progress.Where(kv => !kv.Value.Deleted).ToDictionary(kv => kv.Key, kv => kv.Value),
             lists = _lists.ToDictionary(kv => kv.Key, kv => kv.Value.Where(m => m.Value.Active).OrderByDescending(m => m.Value.Added).Select(m => m.Key).ToList()),
+            kv = _kv.Where(e => e.Value.Value != null).ToDictionary(e => e.Key, e => e.Value),
         };
+    }
+
+    /// <summary>Progress and list entries of other profiles are stored as "profile:bookId".</summary>
+    public static string BookIdOf(string id) { var i = id.LastIndexOf(':'); return i < 0 ? id : id[(i + 1)..]; }
+    static string PrefixOf(string id) { var i = id.LastIndexOf(':'); return i < 0 ? "" : id[..(i + 1)]; }
+
+    public static void SetKv(Dictionary<string, JsonElement?> values)
+    {
+        lock (Gate)
+        {
+            var now = Now;
+            foreach (var (k, v) in values)
+                _kv[k] = new KvEntry(v is null or { ValueKind: JsonValueKind.Null } ? null : v, now);
+            Json.Save(Paths.KvFile, _kv);
+            Sync.Changed();
+        }
     }
 
     static Progress Stamp(string id, Progress p)
     {
-        var b = Library.Get(id);
+        var b = Library.Get(BookIdOf(id));
         return b == null ? p : p with { Size = b.Size, Mtime = b.Mtime, Name = Path.GetFileName(b.Path) };
     }
 
@@ -152,7 +175,7 @@ public static class UserData
         lock (Gate)
         {
             if (!_lists.TryGetValue(list, out var marks)) return false;
-            var b = Library.Get(id);
+            var b = Library.Get(BookIdOf(id));
             marks.TryGetValue(id, out var cur);
             marks[id] = on
                 ? new Mark(Now, b?.Size ?? cur?.Size ?? 0, b?.Mtime ?? cur?.Mtime ?? 0, b == null ? cur?.Name : Path.GetFileName(b.Path))
@@ -168,6 +191,7 @@ public static class UserData
         {
             Progress = new(_progress),
             Lists = _lists.ToDictionary(kv => kv.Key, kv => new Dictionary<string, Mark>(kv.Value)),
+            Kv = new(_kv),
         };
     }
 
@@ -176,7 +200,14 @@ public static class UserData
     {
         lock (Gate)
         {
-            bool pc = false, lc = false;
+            bool pc = false, lc = false, kc = false;
+            var covers = new List<string>();
+            foreach (var (k, r) in other.Kv ?? new())
+                if (!_kv.TryGetValue(k, out var l) || l.Updated < r.Updated)
+                {
+                    _kv[k] = r; kc = true;
+                    if (k.StartsWith("cover:")) covers.Add(k[6..]);
+                }
             foreach (var (id, r) in other.Progress)
                 if (!_progress.TryGetValue(id, out var l) || l.Updated < r.Updated) { _progress[id] = r; pc = true; }
             foreach (var (name, marks) in other.Lists)
@@ -189,9 +220,13 @@ public static class UserData
             var old = Now - 180L * 24 * 3600 * 1000;
             foreach (var (id, p) in _progress.ToList()) if (p.Deleted && p.Updated < old) { _progress.Remove(id); pc = true; }
             foreach (var marks in _lists.Values) foreach (var (id, mk) in marks.ToList()) if (!mk.Active && mk.Removed < old) { marks.Remove(id); lc = true; }
+            foreach (var (k, e) in _kv.ToList()) if (e.Value == null && e.Updated < old) { _kv.Remove(k); kc = true; }
             if (pc) Json.Save(Paths.ProgressFile, _progress);
             if (lc) Json.Save(Paths.ListsFile, _lists);
-            return pc || lc;
+            if (kc) Json.Save(Paths.KvFile, _kv);
+            // A cover chosen on another device: take the new one from the NAS.
+            foreach (var id in covers) Covers.Invalidate(id);
+            return pc || lc || kc;
         }
     }
 
@@ -217,28 +252,31 @@ public static class UserData
             foreach (var (id, p) in _progress.ToList())
             {
                 if (p.Deleted) continue;
-                if (ids.Contains(id))
+                var bid = BookIdOf(id);
+                if (ids.Contains(bid))
                 {
-                    if (p.Size == 0) { var b = byId[id]; _progress[id] = p with { Size = b.Size, Mtime = b.Mtime, Name = Path.GetFileName(b.Path) }; progressChanged = true; }
+                    if (p.Size == 0) { var b = byId[bid]; _progress[id] = p with { Size = b.Size, Mtime = b.Mtime, Name = Path.GetFileName(b.Path) }; progressChanged = true; }
                     continue;
                 }
                 var moved = Find(p.Size, p.Mtime, p.Name);
                 if (moved == null) continue;
+                var to = PrefixOf(id) + moved.Id;
                 _progress[id] = p with { Deleted = true, Updated = Now };
-                if (!_progress.TryGetValue(moved.Id, out var existing) || existing.Updated < p.Updated || existing.Deleted)
-                    _progress[moved.Id] = p with { Name = Path.GetFileName(moved.Path), Updated = Now };
+                if (!_progress.TryGetValue(to, out var existing) || existing.Updated < p.Updated || existing.Deleted)
+                    _progress[to] = p with { Name = Path.GetFileName(moved.Path), Updated = Now };
                 progressChanged = true;
             }
             foreach (var marks in _lists.Values)
             {
                 foreach (var (id, m) in marks.ToList())
                 {
-                    if (!m.Active || ids.Contains(id)) continue;
+                    if (!m.Active || ids.Contains(BookIdOf(id))) continue;
                     var moved = Find(m.Size, m.Mtime, m.Name);
                     if (moved == null) continue;
+                    var to = PrefixOf(id) + moved.Id;
                     marks[id] = m with { Removed = Now };
-                    if (!marks.TryGetValue(moved.Id, out var e) || !e.Active)
-                        marks[moved.Id] = m with { Name = Path.GetFileName(moved.Path), Added = Now, Removed = 0 };
+                    if (!marks.TryGetValue(to, out var e) || !e.Active)
+                        marks[to] = m with { Name = Path.GetFileName(moved.Path), Added = Now, Removed = 0 };
                     listsChanged = true;
                 }
             }
@@ -263,6 +301,8 @@ public class BookMeta
     public string? Genre { get; set; }
     public string? Characters { get; set; }
     public int? PageCount { get; set; }
+    /// <summary>ComicInfo "Manga": YesAndRightToLeft means it reads right to left.</summary>
+    public string? Manga { get; set; }
 
     [JsonIgnore]
     public bool IsEmpty => Title == null && Series == null && Number == null && Writer == null && Summary == null && Year == null;

@@ -69,6 +69,7 @@ public static class Updater
         catch (Exception ex)
         {
             Error = ex.Message;
+            Log.Error("Mise à jour", ex);
             if (State == "downloading") State = "available";
         }
     }

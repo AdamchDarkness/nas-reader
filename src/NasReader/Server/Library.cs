@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
@@ -29,8 +30,9 @@ public static class Library
     // Folder names that mark a section of the library, whatever share they live in.
     static readonly Dictionary<string, string> Sections = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["comics"] = "comic", ["comic"] = "comic", ["bd"] = "comic", ["bandes dessinÃ©es"] = "comic",
+        ["comics"] = "comic", ["comic"] = "comic", ["bd"] = "comic", ["bandes dessinées"] = "comic",
         ["mangas"] = "manga", ["manga"] = "manga",
+        ["webtoons"] = "webtoon", ["webtoon"] = "webtoon", ["manhwa"] = "webtoon",
         ["ebooks"] = "ebook", ["ebook"] = "ebook", ["livres"] = "ebook", ["romans"] = "ebook",
         ["magazines"] = "magazine", ["magazine"] = "magazine", ["presse"] = "magazine",
     };
@@ -53,6 +55,39 @@ public static class Library
     {
         var hash = SHA1.HashData(Encoding.UTF8.GetBytes(path.ToLowerInvariant()));
         return Convert.ToHexString(hash, 0, 8).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Uses the list of books put on the NAS by another device or by the Synology service
+    /// (nas/nasreader-service.py) when it is newer than this one: no need to walk every folder.
+    /// Returns true when this PC's list is now up to date.
+    /// </summary>
+    public static bool AdoptShared(double maxAgeDays = 7)
+    {
+        var st = Settings.Current;
+        if (!st.SyncEnabled || st.Roots.Count > 0) return false;
+        try
+        {
+            var file = Path.Combine(Sync.Folder(st), "library.json");
+            if (!File.Exists(file)) return false;
+            LibrarySnapshot? shared;
+            using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                shared = JsonSerializer.Deserialize<LibrarySnapshot>(fs, Json.Options);
+            if (shared == null || shared.Books.Count == 0) return false;
+            var mine = Snapshot.ScannedAt;
+            if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - shared.ScannedAt > maxAgeDays * 86_400_000) return false;
+            if (shared.ScannedAt <= mine) return true;
+            lock (Gate)
+            {
+                _snapshot = shared;
+                _byId = shared.Books.GroupBy(b => b.Id).ToDictionary(g => g.Key, g => g.First());
+            }
+            Json.Save(Paths.LibraryFile, shared);
+            UserData.Reconcile(shared.Books);
+            Log.Info($"Liste partagée reprise de la NAS ({shared.Books.Count} livres)");
+            return true;
+        }
+        catch (Exception ex) { Log.Error("AdoptShared", ex); return false; }
     }
 
     public static List<string> DiscoverShares(string nas)
@@ -94,7 +129,7 @@ public static class Library
         Task.Run(() =>
         {
             try { Scan(token); ScanError = null; }
-            catch (Exception ex) { ScanError = ex.Message; }
+            catch (Exception ex) { ScanError = ex.Message; Log.Error("Scan", ex); }
             finally { Scanning = false; ScanCurrent = ""; }
         });
     }
@@ -104,7 +139,7 @@ public static class Library
         var settings = Settings.Current;
         ScanFound = 0;
         var roots = EffectiveRoots(settings);
-        if (roots.Count == 0) throw new IOException($"Impossible de joindre \\\\{settings.Nas}. VÃ©rifie que la NAS est allumÃ©e et accessible.");
+        if (roots.Count == 0) throw new IOException($"Impossible de joindre \\\\{settings.Nas}. Vérifie que la NAS est allumée et accessible.");
 
         var exclude = new HashSet<string>(settings.ExcludeFolders, StringComparer.OrdinalIgnoreCase);
         var found = new List<Book>();
@@ -175,6 +210,9 @@ public static class Library
             crumbs = folders.Skip(i + 1).ToList();
             if (k != "ebook") break;
         }
+        // A "Webtoons" folder wins wherever it is (Comics\Webtoons\Solo Leveling): they read differently.
+        var wt = folders.FindIndex(x => Sections.TryGetValue(x, out var k) && k == "webtoon");
+        if (wt >= 0) { kind = "webtoon"; crumbs = folders.Skip(wt + 1).ToList(); }
 
         bool sorted = kind != null;
         if (kind == null)

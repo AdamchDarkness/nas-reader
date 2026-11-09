@@ -14,6 +14,7 @@ class Server : NanoHTTPD("127.0.0.1", 0) {
     override fun serve(s: IHTTPSession): Response = try {
         route(s)
     } catch (e: Exception) {
+        Log.error(s.uri, e)
         json(JSONObject().put("error", friendly(e)), Response.Status.INTERNAL_ERROR)
     }
 
@@ -67,6 +68,21 @@ class Server : NanoHTTPD("127.0.0.1", 0) {
                 ok()
             }
             post && p == listOf("api", "cache", "clear") -> { Books.clearCache(); ok() }
+            get && p == listOf("api", "storage") -> json(storage())
+            post && p.size == 4 && p[1] == "storage" && p[2] == "clear" -> when (p[3]) {
+                "cache" -> { Books.clearCache(); Log.info("Stockage vidé : cache"); ok() }
+                "covers" -> { App.covers.listFiles()?.forEach { it.delete() }; Log.info("Stockage vidé : couvertures"); ok() }
+                else -> notFound()
+            }
+            get && p == listOf("api", "log") -> newFixedLengthResponse(Response.Status.OK, "text/plain; charset=utf-8", Log.report())
+            post && p == listOf("api", "log") -> {
+                val o = JSONObject(body(s)); Log.error("Interface : " + o.keys().asSequence().joinToString(" · ") { o.optString(it) }); ok()
+            }
+            post && p == listOf("api", "kv") -> { UserData.setKv(JSONObject(body(s))); ok() }
+            post && p.size == 5 && p[1] == "cover" && p[3] == "from" -> {
+                val b = Library.get(p[2]) ?: return notFound()
+                Covers.fromPage(b, p[4].toInt()); ok()
+            }
             get && p.size == 3 && p[1] == "cover" -> {
                 val b = Library.get(p[2]) ?: return notFound()
                 val f = Covers.get(b) ?: return notFound()
@@ -113,6 +129,22 @@ class Server : NanoHTTPD("127.0.0.1", 0) {
             "file" -> { val f = Books.localCopy(b); file(f, Pages.mime(f.name), cache = false) }
             else -> notFound()
         }
+    }
+
+    private fun dirSize(d: File?): Long = d?.takeIf { it.exists() }?.walk()?.filter { it.isFile }?.sumOf { it.length() } ?: 0
+
+    /** What this device keeps, and what can be removed. */
+    private fun storage(): JSONObject {
+        val data = listOf("library.json", "meta.json", "progress.json", "lists.json", "kv.json", "settings.json", "log.txt")
+            .sumOf { File(App.data, it).length() }
+        val web = dirSize(File(App.ctx.dataDir, "app_webview")) + dirSize(File(App.ctx.cacheDir, "WebView"))
+        fun item(key: String, bytes: Long, clear: Boolean) = JSONObject().put("key", key).put("bytes", bytes).put("clear", clear)
+        return JSONObject().put("folder", "le stockage de l'application").put("items", JSONArray()
+            .put(item("cache", Books.cacheSize(), true))
+            .put(item("covers", dirSize(App.covers), true))
+            .put(item("offline", dirSize(Offline.dir), false))
+            .put(item("data", data, false))
+            .put(item("web", web, false)))
     }
 
     private fun syncJson() = JSONObject()

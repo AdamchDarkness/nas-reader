@@ -31,6 +31,24 @@ public static class Covers
         return File.Exists(path) ? path : null;
     }
 
+    /// <summary>Drops the local cover so the next request takes the one on the NAS (chosen on another device).</summary>
+    public static void Invalidate(string id)
+    {
+        try { File.Delete(Path.Combine(Paths.Covers, id + ".jpg")); File.Delete(Path.Combine(Paths.Covers, id + ".jpg.fail")); } catch { }
+    }
+
+    /// <summary>Uses another page of the book as its cover, here and on the NAS.</summary>
+    public static async Task FromPageAsync(Book book, int page)
+    {
+        var ob = await Books.OpenAsync(book);
+        var (path, _) = await ob.GetPageAsync(page, CancellationToken.None);
+        byte[] jpeg;
+        await using (var fs = File.OpenRead(path)) jpeg = await Books.ResizeToJpegAsync(fs, Width);
+        await File.WriteAllBytesAsync(CoverPath(book), jpeg);
+        try { File.Delete(CoverPath(book) + ".fail"); } catch { }
+        SharedCache.PublishCover(book.Id, CoverPath(book), force: true);
+    }
+
     public static Task EnsureAsync(Book book) => NeedsWork(book) ? RunOnce(book, useGate: false) : Task.CompletedTask;
 
     static Task RunOnce(Book book, bool useGate)
@@ -212,6 +230,7 @@ public static class Covers
                 Genre = F("Genre"),
                 Characters = F("Characters"),
                 PageCount = int.TryParse(F("PageCount"), out var pc) && pc > 0 ? pc : null,
+                Manga = F("Manga") is "YesAndRightToLeft" or "Yes" ? F("Manga") : null,
             };
             if (meta.Year == "-1" || meta.Year == "0") meta.Year = null;
             return meta.IsEmpty ? null : meta;

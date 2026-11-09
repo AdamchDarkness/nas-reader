@@ -49,6 +49,7 @@ object Sync {
             lastError = null
         } catch (e: Exception) {
             lastError = "Synchronisation impossible avec $dir : ${e.message ?: e}"
+            Log.error("Synchro", e)
         } finally {
             running.set(false)
         }

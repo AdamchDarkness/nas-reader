@@ -86,7 +86,7 @@ class Settings(
             roots = Json.strings(o.optJSONArray("roots")),
             excludeFolders = Json.strings(o.optJSONArray("excludeFolders")),
             scanOnStartup = o.optBoolean("scanOnStartup", true),
-            cacheLimitGb = o.optInt("cacheLimitGb", 4).coerceIn(1, 200),
+            cacheLimitGb = o.optInt("cacheLimitGb", 4).coerceIn(0, 200),
             syncEnabled = o.optBoolean("syncEnabled", true),
             syncFolder = o.optString("syncFolder", "").trim(),
             autoUpdate = o.optBoolean("autoUpdate", true),
@@ -133,6 +133,17 @@ data class Mark(val added: Long, val size: Long = 0, val mtime: Long = 0, val na
  * "deleted" / "removed" markers carry "unread" and "remove from list" to the other devices.
  */
 object UserData {
+    /** Small dated values shared between devices: profiles, reading log, chosen covers. A null value means deleted. */
+    data class Kv(val value: Any?, val updated: Long) {
+        fun toJson(): JSONObject = JSONObject().put("value", value ?: JSONObject.NULL).put("updated", updated)
+        companion object { fun from(o: JSONObject) = Kv(o.opt("value").takeIf { it != null && it != JSONObject.NULL }, o.optLong("updated")) }
+    }
+    private val kv = HashMap<String, Kv>()
+
+    /** Progress and list entries of other profiles are stored as "profile:bookId". */
+    fun bookIdOf(id: String) = id.substringAfterLast(':')
+    private fun prefixOf(id: String) = if (':' in id) id.substringBeforeLast(':') + ":" else ""
+
     private val progress = HashMap<String, Progress>()
     private val lists = linkedMapOf<String, LinkedHashMap<String, Mark>>("favorites" to linkedMapOf(), "toread" to linkedMapOf())
     private val now get() = System.currentTimeMillis()
@@ -140,6 +151,18 @@ object UserData {
     init {
         Json.load("progress.json")?.let { t -> readProgress(JSONObject(t), progress) }
         Json.load("lists.json")?.let { t -> readLists(JSONObject(t), lists) }
+        Json.load("kv.json")?.let { t -> readKv(JSONObject(t), kv) }
+    }
+
+    private fun readKv(o: JSONObject, into: MutableMap<String, Kv>) = o.keys().forEach { into[it] = Kv.from(o.getJSONObject(it)) }
+    private fun kvJson() = JSONObject().also { o -> kv.forEach { (k, v) -> o.put(k, v.toJson()) } }
+
+    @Synchronized
+    fun setKv(values: JSONObject) {
+        val t = now
+        values.keys().forEach { k -> kv[k] = Kv(values.opt(k).takeIf { it != null && it != JSONObject.NULL }, t) }
+        Json.save("kv.json", kvJson().toString())
+        Sync.changed()
     }
 
     private fun readProgress(o: JSONObject, into: MutableMap<String, Progress>) =
@@ -163,18 +186,19 @@ object UserData {
         val l = JSONObject().also { o ->
             lists.forEach { (k, v) -> o.put(k, JSONArray(v.entries.filter { it.value.active }.sortedByDescending { it.value.added }.map { it.key })) }
         }
-        return JSONObject().put("progress", p).put("lists", l)
+        val k = JSONObject().also { o -> kv.forEach { (key, v) -> if (v.value != null) o.put(key, v.toJson()) } }
+        return JSONObject().put("progress", p).put("lists", l).put("kv", k)
     }
 
     /** Everything, markers included: the content of the shared file. */
     @Synchronized
-    fun export(): JSONObject = JSONObject().put("version", 1).put("progress", progressJson()).put("lists", listsJson())
+    fun export(): JSONObject = JSONObject().put("version", 1).put("progress", progressJson()).put("lists", listsJson()).put("kv", kvJson())
 
     private fun saveProgress() { Json.save("progress.json", progressJson().toString()); Sync.changed() }
     private fun saveLists() { Json.save("lists.json", listsJson().toString()); Sync.changed() }
 
     private fun stamp(id: String, p: Progress): Progress {
-        val b = Library.get(id) ?: return p
+        val b = Library.get(bookIdOf(id)) ?: return p
         return p.copy(size = b.size, mtime = b.mtime, name = b.fileName)
     }
 
@@ -198,7 +222,7 @@ object UserData {
     @Synchronized
     fun setMark(list: String, id: String, on: Boolean): Boolean {
         val m = lists[list] ?: return false
-        val b = Library.get(id)
+        val b = Library.get(bookIdOf(id))
         val cur = m[id]
         m[id] = if (on) Mark(now, b?.size ?: cur?.size ?: 0, b?.mtime ?: cur?.mtime ?: 0, b?.fileName ?: cur?.name)
         else (cur ?: Mark(0, b?.size ?: 0, b?.mtime ?: 0, b?.fileName)).copy(removed = now)
@@ -211,6 +235,16 @@ object UserData {
     fun merge(other: JSONObject): Boolean {
         var pc = false
         var lc = false
+        var kc = false
+        val covers = ArrayList<String>()
+        val rk = HashMap<String, Kv>().also { m -> other.optJSONObject("kv")?.let { readKv(it, m) } }
+        for ((k, r) in rk) {
+            val l = kv[k]
+            if (l == null || l.updated < r.updated) {
+                kv[k] = r; kc = true
+                if (k.startsWith("cover:")) covers.add(k.removePrefix("cover:"))
+            }
+        }
         val rp = HashMap<String, Progress>().also { m -> other.optJSONObject("progress")?.let { readProgress(it, m) } }
         for ((id, r) in rp) {
             val l = progress[id]
@@ -228,9 +262,13 @@ object UserData {
         val old = now - 180L * 24 * 3600 * 1000
         progress.entries.removeIf { (it.value.deleted && it.value.updated < old).also { r -> if (r) pc = true } }
         lists.values.forEach { m -> m.entries.removeIf { (!it.value.active && it.value.removed < old).also { r -> if (r) lc = true } } }
+        kv.entries.removeIf { (it.value.value == null && it.value.updated < old).also { r -> if (r) kc = true } }
         if (pc) Json.save("progress.json", progressJson().toString())
         if (lc) Json.save("lists.json", listsJson().toString())
-        return pc || lc
+        if (kc) Json.save("kv.json", kvJson().toString())
+        // A cover chosen on another device: take the new one from the NAS.
+        covers.forEach { Covers.invalidate(it) }
+        return pc || lc || kc
     }
 
     /** After a scan, re-attach progress and lists of books whose path changed. */
@@ -247,18 +285,20 @@ object UserData {
         var pc = false
         var lc = false
         for ((id, p) in progress.toList()) {
-            if (p.deleted || id in ids) continue
+            if (p.deleted || bookIdOf(id) in ids) continue
             val moved = find(p.size, p.mtime, p.name) ?: continue
+            val to = prefixOf(id) + moved.id
             progress[id] = p.copy(deleted = true, updated = now)
-            val existing = progress[moved.id]
-            if (existing == null || existing.updated < p.updated || existing.deleted) progress[moved.id] = p.copy(name = moved.fileName, updated = now)
+            val existing = progress[to]
+            if (existing == null || existing.updated < p.updated || existing.deleted) progress[to] = p.copy(name = moved.fileName, updated = now)
             pc = true
         }
         for (marks in lists.values) for ((id, m) in marks.toList()) {
-            if (!m.active || id in ids) continue
+            if (!m.active || bookIdOf(id) in ids) continue
             val moved = find(m.size, m.mtime, m.name) ?: continue
+            val to = prefixOf(id) + moved.id
             marks[id] = m.copy(removed = now)
-            if (marks[moved.id]?.active != true) marks[moved.id] = m.copy(name = moved.fileName, added = now, removed = 0)
+            if (marks[to]?.active != true) marks[to] = m.copy(name = moved.fileName, added = now, removed = 0)
             lc = true
         }
         if (pc) saveProgress()

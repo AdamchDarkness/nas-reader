@@ -11,7 +11,7 @@ namespace NasReader.Server;
 /// </summary>
 public static class SharedCache
 {
-    static readonly Channel<(string id, string local)> Uploads = Channel.CreateUnbounded<(string, string)>();
+    static readonly Channel<(string id, string local, bool force)> Uploads = Channel.CreateUnbounded<(string, string, bool)>();
     static HashSet<string>? _remote;
     static DateTime _listedAt;
     static readonly object Gate = new();
@@ -66,21 +66,21 @@ public static class SharedCache
     }
 
     /// <summary>Sends a cover made here to the NAS, in the background.</summary>
-    public static void PublishCover(string id, string local)
+    public static void PublishCover(string id, string local, bool force = false)
     {
-        if (!Enabled || Remote().Contains(id)) return;
+        if (!Enabled || (!force && Remote().Contains(id))) return;
         Interlocked.Increment(ref Pending);
-        Uploads.Writer.TryWrite((id, local));
+        Uploads.Writer.TryWrite((id, local, force));
     }
 
     static async Task UploadLoopAsync()
     {
-        await foreach (var (id, local) in Uploads.Reader.ReadAllAsync())
+        await foreach (var (id, local, force) in Uploads.Reader.ReadAllAsync())
         {
             try
             {
                 var remote = Remote();
-                if (!remote.Contains(id) && File.Exists(local))
+                if ((force || !remote.Contains(id)) && File.Exists(local))
                 {
                     var dst = Path.Combine(CoversDir, id + ".jpg");
                     File.Copy(local, dst + ".tmp", true);

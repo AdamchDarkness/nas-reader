@@ -60,6 +60,7 @@ public static class Sync
         catch (Exception ex)
         {
             LastError = $"Synchronisation impossible avec {Folder(s)} : {ex.Message}";
+            Log.Error("Synchro", ex);
         }
         finally
         {

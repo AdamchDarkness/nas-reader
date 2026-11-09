@@ -39,7 +39,15 @@ public class AppHost
         Sync.Start();
         SharedCache.Start();
         Updater.Start();
-        if (Settings.Current.ScanOnStartup || Library.Snapshot.Books.Count == 0) Library.StartScan();
+        Log.Info($"Démarrage de Nas Reader {Updater.CurrentText}");
+        // The list made by another device or by the Synology service is much faster than a scan over the network.
+        _ = Task.Run(() =>
+        {
+            // On the PC, a list older than half a day still gets a fresh scan, as before.
+            var shared = Library.AdoptShared(maxAgeDays: 0.5);
+            if (!shared && (Settings.Current.ScanOnStartup || Library.Snapshot.Books.Count == 0)) Library.StartScan();
+            else if (Library.Snapshot.Books.Count > 0) Enricher.Restart();
+        });
         return host;
     }
 
@@ -144,6 +152,50 @@ public class AppHost
 
         app.MapPost("/api/cache/clear", () => { Books.ClearCache(); return Results.Ok(); });
 
+        // What this PC keeps, and what can be removed.
+        app.MapGet("/api/storage", () =>
+        {
+            static long Size(string dir) => Directory.Exists(dir) ? new DirectoryInfo(dir).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length) : 0;
+            static long FileSize(params string[] files) => files.Sum(f => File.Exists(f) ? new FileInfo(f).Length : 0);
+            var covers = Size(Paths.Covers);
+            var cache = Books.CacheSize();
+            var offline = Size(Offline.Dir);
+            var data = FileSize(Paths.LibraryFile, Paths.MetaFile, Paths.ProgressFile, Paths.ListsFile, Paths.KvFile, Paths.SettingsFile, Paths.LogFile);
+            var web = Size(Path.Combine(Paths.Root, "WebView2"));
+            return Results.Json(new
+            {
+                folder = Paths.Root,
+                items = new object[]
+                {
+                    new { key = "cache", bytes = cache, clear = true },
+                    new { key = "covers", bytes = covers, clear = true },
+                    new { key = "offline", bytes = offline, clear = false },
+                    new { key = "data", bytes = data, clear = false },
+                    new { key = "web", bytes = web, clear = false },
+                },
+            });
+        });
+        app.MapPost("/api/storage/clear/{key}", (string key) =>
+        {
+            if (key == "cache") Books.ClearCache();
+            else if (key == "covers")
+                foreach (var f in Directory.EnumerateFiles(Paths.Covers)) try { File.Delete(f); } catch { }
+            else return Results.NotFound();
+            Log.Info($"Stockage vidé : {key}");
+            return Results.Ok();
+        });
+
+        app.MapGet("/api/log", () => Results.Text(Log.Report(), "text/plain; charset=utf-8"));
+        app.MapPost("/api/log", (Dictionary<string, string> e) => { Log.Error("Interface : " + string.Join(" · ", e.Values)); return Results.Ok(); });
+        app.MapPost("/api/log/save", () =>
+        {
+            var file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), $"NasReader-rapport-{DateTime.Now:yyyyMMdd-HHmm}.txt");
+            File.WriteAllText(file, Log.Report());
+            Process.Start("explorer.exe", $"/select,\"{file}\"");
+            return Results.Json(new { file });
+        });
+        app.MapPost("/api/kv", (Dictionary<string, System.Text.Json.JsonElement?> values) => { UserData.SetKv(values); return Results.Ok(); });
+
         app.MapGet("/api/cover/{id}", async (string id, HttpContext ctx) =>
         {
             var book = Library.Get(id);
@@ -152,6 +204,14 @@ public class AppHost
             if (path == null) return Results.NotFound();
             ctx.Response.Headers.CacheControl = "public, max-age=604800";
             return Results.File(path, "image/jpeg");
+        });
+
+        app.MapPost("/api/cover/{id}/from/{n:int}", async (string id, int n) =>
+        {
+            var book = Library.Get(id);
+            if (book == null) return Results.NotFound();
+            try { await Covers.FromPageAsync(book, n); return Results.Ok(); }
+            catch (Exception ex) { Log.Error("Couverture", ex); return Results.Json(new { error = Friendly(ex) }, statusCode: 500); }
         });
 
         app.MapGet("/api/book/{id}/open", async (string id) =>
@@ -167,6 +227,7 @@ public class AppHost
             }
             catch (Exception ex)
             {
+                Log.Error($"Ouverture de {book.Path}", ex);
                 return Results.Json(new { error = Friendly(ex) }, statusCode: 500);
             }
         });
@@ -186,7 +247,7 @@ public class AppHost
                 return Results.File(path, mime);
             }
             catch (OperationCanceledException) { return Results.StatusCode(499); }
-            catch (Exception ex) { return Results.Problem(Friendly(ex)); }
+            catch (Exception ex) { Log.Error($"Page {n} de {book.Path}", ex); return Results.Problem(Friendly(ex)); }
         });
 
         app.MapPost("/api/book/{id}/prefetch", (string id) =>
@@ -232,9 +293,9 @@ public class AppHost
     static string Friendly(Exception ex) => ex switch
     {
         IOException io when io.Message.Contains("network", StringComparison.OrdinalIgnoreCase) =>
-            "La NAS ne rÃ©pond pas. VÃ©rifie qu'elle est allumÃ©e.",
+            "La NAS ne répond pas. Vérifie qu'elle est allumée.",
         FileNotFoundException => "Ce fichier n'existe plus sur la NAS. Relance un scan.",
-        UnauthorizedAccessException => "AccÃ¨s refusÃ© Ã  ce fichier sur la NAS.",
+        UnauthorizedAccessException => "Accès refusé à ce fichier sur la NAS.",
         _ => ex.Message,
     };
 }

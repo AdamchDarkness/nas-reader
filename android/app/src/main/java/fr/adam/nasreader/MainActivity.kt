@@ -128,5 +128,25 @@ class MainActivity : Activity() {
     inner class Bridge {
         @JavascriptInterface
         fun immersive(on: Boolean) = runOnUiThread { applyImmersive(on) }
+
+        /** "portrait", "landscape" or anything else to follow the device. */
+        @JavascriptInterface
+        fun orientation(mode: String) = runOnUiThread {
+            requestedOrientation = when (mode) {
+                "portrait" -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                "landscape" -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                else -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+        }
+
+        /** Hands a text (the bug report) to Android's share sheet: mail, messages, Drive… */
+        @JavascriptInterface
+        fun share(text: String) = runOnUiThread {
+            val send = android.content.Intent(android.content.Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(android.content.Intent.EXTRA_SUBJECT, "Nas Reader : rapport de problème")
+                .putExtra(android.content.Intent.EXTRA_TEXT, text)
+            startActivity(android.content.Intent.createChooser(send, "Envoyer le rapport"))
+        }
     }
 }

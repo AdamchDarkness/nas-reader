@@ -39,6 +39,20 @@ object Covers {
         return f.takeIf { it.exists() }
     }
 
+    /** Drops the local cover so the next request takes the one on the NAS (chosen on another device). */
+    fun invalidate(id: String) {
+        File(App.covers, "$id.jpg").delete(); File(App.covers, "$id.fail").delete()
+    }
+
+    /** Uses another page of the book as its cover, here and on the NAS. */
+    fun fromPage(b: Book, page: Int) {
+        val bytes = resize(Books.get(b).page(page).readBytes()) ?: throw java.io.IOException("Image illisible")
+        val f = coverFile(b)
+        File(f.path + ".tmp").also { it.writeBytes(bytes) }.renameTo(f)
+        failFile(b).delete()
+        Thread { SharedCache.publishCover(b.id, f, force = true) }.start()
+    }
+
     fun ensure(b: Book) {
         if (needsWork(b)) process(b, useGate = false)
     }
@@ -207,6 +221,7 @@ object Covers {
         put("year", f("Year")?.takeIf { it != "-1" && it != "0" })
         put("writer", f("Writer")); put("artist", f("Penciller") ?: f("Artist") ?: f("CoverArtist"))
         put("publisher", f("Publisher")); put("summary", f("Summary")); put("genre", f("Genre")); put("characters", f("Characters"))
+        f("Manga")?.takeIf { it == "YesAndRightToLeft" || it == "Yes" }?.let { m.put("manga", it) }
         f("PageCount")?.toIntOrNull()?.takeIf { it > 0 }?.let { m.put("pageCount", it) }
         m.takeIf { it.has("title") || it.has("series") || it.has("number") || it.has("writer") || it.has("summary") || it.has("year") }
     }.getOrNull()

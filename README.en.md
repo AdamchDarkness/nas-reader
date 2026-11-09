@@ -24,13 +24,21 @@ Latest version: **[Releases](https://github.com/AdamchDarkness/nas-reader/releas
 - **Automatic sorting** from the folders: a `Comics`, `Mangas`, `Ebooks` or `Magazines` folder sets the category,
   and the sub-folders become publisher → character → series
   (`Comics\Marvel\Spider-Man\Amazing Spider-Man`).
-- **Search** across titles, series, writers, artists and issue numbers (`#666`).
+- **Webtoons**: a `Webtoons` (or `Manhwa`) folder opens as one continuous vertical strip.
+- **Tolerant search** across titles, series, writers, artists, summaries and issue numbers (`#666`): `batmn`
+  finds Batman. Combined filters (type, read / unread, downloaded, format, publisher) and recent searches.
+- **Timeline** by decade and year, and **missing issues** shown in each series.
 - **Book details** read from `ComicInfo.xml` (CBZ/CBR) and EPUB metadata: summary, writer, artist, year.
 - **Duplicates grouped**: the same book in CBR and PDF shows up once, with both versions.
-- **Reader**: single page, double page, vertical scrolling, manga direction, zoom, magnifier, thumbnails, full screen.
-  On Android: swipe to turn pages, pinch to zoom.
+- **Reader**: single page, double page, vertical scrolling, webtoon mode, manga direction, zoom, magnifier,
+  thumbnails, full screen. The manga direction is kept per series and read from ComicInfo. On the last page,
+  the next issue opens after 8 seconds. Any page can become the book's cover.
+  On Android: swipe to turn pages, pinch to zoom, orientation locked per series.
 - **Progress, favorites, "to read" list, "up next"**, series marked as read.
 - **Sync** between the PC, the phone and the tablet, through a file on the NAS.
+- **Profiles**: each one has its own progress, lists and statistics ("Who's reading?" at launch).
+- **Statistics**: pages, reading time, streaks, favorite series and authors, and a **year in review**.
+- **Custom home page** (rows and order), **English interface**, **bug report** to copy or share.
 - **Offline reading**: download a book or a whole series to the device to read it away from the NAS.
 - **Automatic updates** from the GitHub releases.
 
@@ -71,7 +79,7 @@ The PC does the heavy work once and leaves it on the NAS, in
 
 | File | Content |
 |---|---|
-| `library.json` | The list of books, after each scan made by the PC |
+| `library.json` | The list of books, after each scan made by the PC (or the Synology service) |
 | `covers\` | One cover per book (about 60 KB each) |
 | `meta.json` | Details read from ComicInfo and EPUB files |
 | `userdata.json` | Progress, favorites, "to read" (sync) |
@@ -79,6 +87,26 @@ The PC does the heavy work once and leaves it on the NAS, in
 Phones and tablets take these files instead of walking the NAS and opening every comic over Wi-Fi. When a new
 file lands on the NAS, the PC makes its cover on its next scan and puts it there too. While you read, the
 Android app does no background work.
+
+## Small Synology service (optional)
+
+[`nas/nasreader-service.py`](nas/nasreader-service.py) runs the scan **on the NAS itself**, reading its disks
+instead of going over the network, and puts `library.json` in `.nasreader`. The devices load this list at
+launch instead of walking the folders. It only needs the Python 3 that ships with DSM 7 (no Docker, no
+package), reads the folders every 30 minutes and rewrites the list only when a file changed. It changes
+nothing else.
+
+1. Copy `nasreader-service.py` to `\\lord_of_adam\Comics Mangas Livre\.nasreader\`.
+2. DSM → Control Panel → Task Scheduler → Create → Triggered task → User-defined script.
+   Event: **Boot-up**. User: `root` (or an account that can read every shared folder).
+3. Script:
+   ```
+   python3 "/volume1/Comics Mangas Livre/.nasreader/nasreader-service.py" --nas lord_of_adam
+   ```
+4. Right-click the task → **Run** to start it without rebooting.
+
+`--nas` must be the name typed on the PC (`\\lord_of_adam`): book ids depend on it.
+`--share /volume1/Comics` limits the scan to some folders, `--every 60` changes the interval.
 
 ## Offline reading
 
@@ -105,6 +133,7 @@ Automatic updates can be turned off in Réglages → Mises à jour.
 |---|---|
 | ← → / Space | Previous / next page |
 | S / D / W | Single / double page / vertical scrolling |
+| B | Webtoon mode (strip without gaps) |
 | Z | Fit height ↔ fit width |
 | R | Manga direction (right to left) |
 | T | Thumbnails |
@@ -114,12 +143,20 @@ Automatic updates can be turned off in Réglages → Mises à jour.
 | Esc | Close |
 | Ctrl K or / | Search |
 
-## Local files
+## What stays on the device
 
-- Windows: `%LOCALAPPDATA%\NasReader` (library, progress, covers, reading cache).
-- Android: the app's private storage.
+Comics stay on the NAS: they are **never copied in full** to the PC or the tablet, except the ones you
+download for offline reading. The device only keeps what makes it fast:
 
-Uninstalling keeps this data. The shared copy of the progress stays on the NAS.
+| What | Size | Setting |
+|---|---|---|
+| Reading cache (pages of recently opened books) | limited, 8 GB by default | Settings → Reading cache, **0** = keep nothing |
+| Covers (small pictures) | about 60 KB per book | "Clear" button, they come back from the NAS |
+| Offline downloads | what you choose | Downloaded → Remove all |
+| List, details, progress, settings, log | a few MB | — |
+
+Settings → **Storage on this device** shows the space each one takes.
+Windows: `%LOCALAPPDATA%\NasReader`. Android: the app's private storage, wiped when it is uninstalled.
 
 ## Build from source
 

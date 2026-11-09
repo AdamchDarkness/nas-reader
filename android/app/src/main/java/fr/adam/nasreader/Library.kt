@@ -37,6 +37,7 @@ object Library {
     private val sections = mapOf(
         "comics" to "comic", "comic" to "comic", "bd" to "comic", "bandes dessinées" to "comic",
         "mangas" to "manga", "manga" to "manga",
+        "webtoons" to "webtoon", "webtoon" to "webtoon", "manhwa" to "webtoon",
         "ebooks" to "ebook", "ebook" to "ebook", "livres" to "ebook", "romans" to "ebook",
         "magazines" to "magazine", "magazine" to "magazine", "presse" to "magazine",
     )
@@ -105,6 +106,7 @@ object Library {
                 scan(); error = null
             } catch (e: Exception) {
                 error = e.message ?: e.toString()
+                Log.error("Scan", e)
             } finally {
                 scanning.set(false); current = ""
             }
@@ -174,6 +176,9 @@ object Library {
             crumbs = folders.drop(i + 1)
             if (k != "ebook") break
         }
+        // A "Webtoons" folder wins wherever it is (Comics\Webtoons\Solo Leveling): they read differently.
+        val wt = folders.indexOfFirst { sections[it.lowercase()] == "webtoon" }
+        if (wt >= 0) { kind = "webtoon"; crumbs = folders.drop(wt + 1) }
         val sorted = kind != null
         if (kind == null) {
             kind = when (fmt) { "cbz", "cbr", "cb7" -> "comic"; "epub", "mobi", "azw3" -> "ebook"; else -> "pdf" }
