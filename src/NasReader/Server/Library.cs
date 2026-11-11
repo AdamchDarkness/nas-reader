@@ -25,7 +25,7 @@ public class LibrarySnapshot
 public static class Library
 {
     static readonly HashSet<string> Extensions = new(StringComparer.OrdinalIgnoreCase)
-        { ".cbz", ".cbr", ".cb7", ".pdf", ".epub", ".mobi", ".azw3" };
+        { ".cbz", ".cbr", ".cb7", ".cbt", ".cba", ".pdf", ".epub", ".mobi", ".azw3" };
 
     // Folder names that mark a section of the library, whatever share they live in.
     static readonly Dictionary<string, string> Sections = new(StringComparer.OrdinalIgnoreCase)
@@ -65,7 +65,7 @@ public static class Library
     public static bool AdoptShared(double maxAgeDays = 7)
     {
         var st = Settings.Current;
-        if (!st.SyncEnabled || st.Roots.Count > 0) return false;
+        if (!st.UsesSync || st.Roots.Count > 0) return false;
         try
         {
             var file = Path.Combine(Sync.Folder(st), "library.json");
@@ -77,6 +77,8 @@ public static class Library
             var mine = Snapshot.ScannedAt;
             if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - shared.ScannedAt > maxAgeDays * 86_400_000) return false;
             if (shared.ScannedAt <= mine) return true;
+            // Keep the books of this PC's own folders: the shared list only has the NAS.
+            shared.Books.AddRange(Snapshot.Books.Where(b => !st.OnMainNas(b.Path)));
             lock (Gate)
             {
                 _snapshot = shared;
@@ -114,10 +116,15 @@ public static class Library
         return shares.Select(s => $@"\\{nas}\{s}").ToList();
     }
 
-    public static List<string> EffectiveRoots(Settings s) =>
-        s.Roots.Count > 0 ? s.Roots : DiscoverShares(s.Nas);
+    /// <summary>The NAS shares to scan (all of them unless chosen in the settings).</summary>
+    public static List<string> NasRoots(Settings s) =>
+        !s.HasNas ? new() : s.Roots.Count > 0 ? s.Roots : DiscoverShares(s.Nas);
 
-    public static void StartScan()
+    static List<string> Extras(Settings s) =>
+        s.ExtraFolders.Select(f => f.Trim().TrimEnd('\\')).Where(f => f.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+    /// <summary>Scans the NAS and the extra folders; with <paramref name="extrasOnly"/>, only the extra folders.</summary>
+    public static void StartScan(bool extrasOnly = false)
     {
         lock (Gate)
         {
@@ -128,21 +135,29 @@ public static class Library
         var token = _scanCts.Token;
         Task.Run(() =>
         {
-            try { Scan(token); ScanError = null; }
+            try { Scan(token, extrasOnly); ScanError = null; }
             catch (Exception ex) { ScanError = ex.Message; Log.Error("Scan", ex); }
             finally { Scanning = false; ScanCurrent = ""; }
         });
     }
 
-    static void Scan(CancellationToken token)
+    static void Scan(CancellationToken token, bool extrasOnly)
     {
         var settings = Settings.Current;
         ScanFound = 0;
-        var roots = EffectiveRoots(settings);
-        if (roots.Count == 0) throw new IOException($"Impossible de joindre \\\\{settings.Nas}. Vérifie que la NAS est allumée et accessible.");
+        var extras = Extras(settings);
+        var nasRoots = extrasOnly ? new List<string>() : NasRoots(settings);
+        // NAS out of reach: keep its books from the last scan and still read the other folders.
+        var keepNas = extrasOnly || (settings.HasNas && nasRoots.Count == 0);
+        if (keepNas && !extrasOnly && extras.Count == 0)
+            throw new IOException($"Impossible de joindre \\\\{settings.Nas}. Vérifie que la NAS est allumée et accessible.");
+        if (!settings.HasNas && extras.Count == 0)
+            throw new IOException("Aucun dossier à lire : indique le nom de la NAS ou ajoute un dossier dans les réglages.");
+        var roots = nasRoots.Concat(extras).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var previous = Snapshot.Books;
 
         var exclude = new HashSet<string>(settings.ExcludeFolders, StringComparer.OrdinalIgnoreCase);
-        var found = new List<Book>();
+        var found = keepNas ? previous.Where(b => settings.OnMainNas(b.Path)).ToList() : new List<Book>();
         var options = new EnumerationOptions
         {
             RecurseSubdirectories = false,
@@ -152,7 +167,14 @@ public static class Library
 
         foreach (var root in roots)
         {
-            if (!Directory.Exists(root)) continue;
+            if (!Directory.Exists(root))
+            {
+                // A folder that cannot be reached right now (friend's NAS turned off, USB disk unplugged) keeps its books.
+                var prefix = root.TrimEnd('\\') + "\\";
+                found.AddRange(previous.Where(b => b.Path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
+                Log.Info($"Dossier injoignable, livres gardés : {root}");
+                continue;
+            }
             var stack = new Stack<DirectoryInfo>();
             stack.Push(new DirectoryInfo(root));
             while (stack.Count > 0)
@@ -219,13 +241,13 @@ public static class Library
         {
             kind = fmt switch
             {
-                "cbz" or "cbr" or "cb7" => "comic",
+                "cbz" or "cbr" or "cb7" or "cbt" or "cba" => "comic",
                 "epub" or "mobi" or "azw3" => "ebook",
                 _ => "pdf",
             };
             crumbs = folders;
         }
-        else if (kind == "ebook" && fmt is "cbz" or "cbr" or "cb7")
+        else if (kind == "ebook" && fmt is "cbz" or "cbr" or "cb7" or "cbt" or "cba")
         {
             kind = "comic";
         }

@@ -31,7 +31,7 @@ data class Book(
 }
 
 object Library {
-    private val extensions = setOf("cbz", "cbr", "cb7", "pdf", "epub", "mobi", "azw3")
+    private val extensions = setOf("cbz", "cbr", "cb7", "cbt", "cba", "pdf", "epub", "mobi", "azw3")
 
     // Folder names that mark a section of the library, whatever share they live in.
     private val sections = mapOf(
@@ -181,9 +181,9 @@ object Library {
         if (wt >= 0) { kind = "webtoon"; crumbs = folders.drop(wt + 1) }
         val sorted = kind != null
         if (kind == null) {
-            kind = when (fmt) { "cbz", "cbr", "cb7" -> "comic"; "epub", "mobi", "azw3" -> "ebook"; else -> "pdf" }
+            kind = when (fmt) { "cbz", "cbr", "cb7", "cbt", "cba" -> "comic"; "epub", "mobi", "azw3" -> "ebook"; else -> "pdf" }
             crumbs = folders
-        } else if (kind == "ebook" && fmt in setOf("cbz", "cbr", "cb7")) kind = "comic"
+        } else if (kind == "ebook" && fmt in setOf("cbz", "cbr", "cb7", "cbt", "cba")) kind = "comic"
 
         val clean = ArrayList<String>()
         for (c in crumbs) if (clean.isEmpty() || !clean.last().equals(c, ignoreCase = true)) clean.add(c)

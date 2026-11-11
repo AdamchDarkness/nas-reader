@@ -16,7 +16,7 @@ public static class Covers
     static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Lazy<Task>> Pending = new();
 
     static string CoverPath(Book b) => Path.Combine(Paths.Covers, b.Id + ".jpg");
-    static bool HasMetaFormat(Book b) => b.Fmt is "cbz" or "cbr" or "cb7" or "epub";
+    static bool HasMetaFormat(Book b) => b.Fmt is "cbz" or "cbr" or "cb7" or "cbt" or "cba" or "epub";
     static bool NeedsCover(Book b) => b.Fmt is not ("mobi" or "azw3") && !File.Exists(CoverPath(b)) && !File.Exists(CoverPath(b) + ".fail");
     static bool NeedsMeta(Book b) => HasMetaFormat(b) && !MetaStore.Has(b.Id);
     public static bool NeedsWork(Book b) => NeedsCover(b) || NeedsMeta(b);
@@ -73,7 +73,7 @@ public static class Covers
             var source = Books.Source(book);
             var (jpeg, meta) = book.Fmt switch
             {
-                "cbz" or "cbr" or "cb7" => await FromArchiveAsync(source, needCover),
+                "cbz" or "cbr" or "cb7" or "cbt" or "cba" => await FromArchiveAsync(source, needCover),
                 "pdf" => (await FromPdfAsync(source), null),
                 "epub" => await FromEpubAsync(source, needCover),
                 _ => (null, null),

@@ -25,7 +25,7 @@ object Covers {
 
     private fun coverFile(b: Book) = File(App.covers, "${b.id}.jpg")
     private fun failFile(b: Book) = File(App.covers, "${b.id}.fail")
-    private fun hasMetaFormat(b: Book) = b.fmt in setOf("cbz", "cbr", "cb7", "epub")
+    private fun hasMetaFormat(b: Book) = b.fmt in setOf("cbz", "cbr", "cb7", "cbt", "cba", "epub")
     private fun needsCover(b: Book) = b.fmt !in setOf("mobi", "azw3") && !coverFile(b).exists() && !failFile(b).exists()
     private fun needsMeta(b: Book) = hasMetaFormat(b) && !MetaStore.has(b.id)
     fun needsWork(b: Book) = needsCover(b) || needsMeta(b)
@@ -76,7 +76,7 @@ object Covers {
                 val (jpeg, meta) = counter.use { raw ->
                     CachedFile(raw).use { rf ->
                         when (b.fmt) {
-                            "cbz", "cbr", "cb7" -> fromArchive(rf, needCover)
+                            "cbz", "cbr", "cb7", "cbt", "cba" -> fromArchive(rf, needCover)
                             "pdf" -> fromPdf(rf, b.id) to null
                             "epub" -> fromEpub(rf, needCover)
                             else -> null to null

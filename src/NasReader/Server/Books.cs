@@ -55,7 +55,7 @@ public static class Books
         return book.Fmt switch
         {
             "pdf" => await PdfBook.LoadAsync(book, dir),
-            "cbz" or "cbr" or "cb7" => ArchiveBook.Load(book, dir),
+            "cbz" or "cbr" or "cb7" or "cbt" or "cba" => ArchiveBook.Load(book, dir),
             _ => new FileOnlyBook { Book = book },
         };
     }
@@ -70,7 +70,7 @@ public static class Books
     /// <summary>Reads the first pages of a book in the background so it opens instantly.</summary>
     public static void Prefetch(Book book)
     {
-        if (book.Fmt is not ("pdf" or "cbz" or "cbr" or "cb7")) return;
+        if (book.Fmt is not ("pdf" or "cbz" or "cbr" or "cb7" or "cbt" or "cba")) return;
         _ = Task.Run(async () =>
         {
             try

@@ -4,7 +4,7 @@
 
 Liseuse de comics, mangas, ebooks et PDF pour une NAS à la maison, sur **Windows** et **Android** (téléphone et tablette).
 Nas Reader parcourt les partages de la NAS, classe tout seul la bibliothèque (Marvel, DC, Indépendants…) et ouvre
-les CBR, CBZ, CB7, PDF et EPUB directement, sans rien copier à la main.
+les CBR, CBZ, CB7, CBT, CBA, PDF et EPUB directement, sans rien copier à la main.
 
 ## Télécharger
 
@@ -19,6 +19,11 @@ Dernière version : **[Releases](https://github.com/AdamchDarkness/nas-reader/re
 ## Ce que fait l'appli
 
 - **Scan de la NAS** : tous les partages de `\\lord_of_adam` (réglable), sans la corbeille `#recycle` ni `_Doublons`.
+- **Autres dossiers** (Windows) : des dossiers du PC (`D:\BD`) ou la NAS d'un ami (`\\nas-ami\Comics`), lus sans
+  rien y écrire. Ils restent sur ce PC et ne sont pas envoyés au téléphone. Le nom de la NAS peut même rester vide.
+- **Titres lisibles** : `Comics.FR.-.Strange Academy - 03 - La Magie des Vœux (Panini…) [Digital]` devient
+  « Strange Academy #3 · La Magie des Vœux ». Numéros spéciaux compris (#0, #1/2, annuals à la fin), relances
+  séparées (« Daredevil (1964) » / « Daredevil (2019) ») et langue repérée (VF / VO), filtrable.
 - **Classement automatique** d'après les dossiers : un dossier `Comics`, `Mangas`, `Ebooks` ou `Magazines` donne la
   catégorie, puis les sous-dossiers deviennent éditeur → personnage → série
   (`Comics\Marvel\Spider-Man\Amazing Spider-Man`).
@@ -32,10 +37,14 @@ Dernière version : **[Releases](https://github.com/AdamchDarkness/nas-reader/re
   plein écran. Le sens manga est retenu par série et pris dans ComicInfo. À la dernière page, le numéro suivant
   s'ouvre après 8 secondes. N'importe quelle page peut devenir la couverture du livre.
   Sur Android : glisser pour tourner les pages, pincer pour zoomer, orientation bloquée par série.
+  Minuterie de lecture, rappel de pause des yeux, double page en paysage seulement, molette, et protection contre
+  les pages tournées par erreur.
 - **Progression, favoris, liste « À lire », « À suivre »**, séries marquées comme lues.
 - **Synchronisation** entre le PC, le téléphone et la tablette, via un fichier sur la NAS.
 - **Profils** : chacun sa progression, ses listes et ses statistiques (« Qui lit ? » au démarrage).
 - **Statistiques** : pages, temps de lecture, jours d'affilée, séries et auteurs préférés, et **bilan de l'année**.
+  Comparaison avec l'année précédente, badges, profils comparés et taille de la bibliothèque dans le temps.
+- **Au hasard** : un livre jamais ouvert dans un dossier ou une recherche, et rangée **Livres oubliés**.
 - **Accueil personnalisable** (rangées et ordre), **interface en anglais**, **rapport de bug** à copier ou partager.
 - **Lecture hors ligne** : télécharge un livre ou une série entière sur l'appareil pour la lire loin de la NAS.
 - **Mises à jour automatiques** depuis les releases GitHub.

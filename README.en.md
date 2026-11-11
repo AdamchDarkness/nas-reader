@@ -4,7 +4,7 @@
 
 A comics, manga, ebook and PDF reader for a home NAS, on **Windows** and **Android** (phone and tablet).
 Nas Reader walks the NAS shares, sorts the library by itself (Marvel, DC, Independents…) and opens CBR, CBZ, CB7,
-PDF and EPUB files directly, without copying anything by hand.
+CBT, CBA, PDF and EPUB files directly, without copying anything by hand.
 
 The interface is in French.
 
@@ -21,6 +21,11 @@ Latest version: **[Releases](https://github.com/AdamchDarkness/nas-reader/releas
 ## Features
 
 - **NAS scan**: every share of `\\lord_of_adam` (configurable), skipping the `#recycle` bin and `_Doublons`.
+- **Other folders** (Windows): folders on the PC (`D:\Comics`) or a friend's NAS (`\\friend-nas\Comics`), read
+  without writing anything there. They stay on this PC and are not sent to the phone. The NAS name can even be left empty.
+- **Readable titles**: `Comics.FR.-.Strange Academy - 03 - La Magie des Vœux (Panini…) [Digital]` becomes
+  "Strange Academy #3 · La Magie des Vœux". Special numbers understood (#0, #1/2, annuals last), relaunches kept
+  apart ("Daredevil (1964)" / "Daredevil (2019)") and language spotted (French / original), with a filter.
 - **Automatic sorting** from the folders: a `Comics`, `Mangas`, `Ebooks` or `Magazines` folder sets the category,
   and the sub-folders become publisher → character → series
   (`Comics\Marvel\Spider-Man\Amazing Spider-Man`).
@@ -34,10 +39,14 @@ Latest version: **[Releases](https://github.com/AdamchDarkness/nas-reader/releas
   thumbnails, full screen. The manga direction is kept per series and read from ComicInfo. On the last page,
   the next issue opens after 8 seconds. Any page can become the book's cover.
   On Android: swipe to turn pages, pinch to zoom, orientation locked per series.
+  Reading timer, eye-break reminder, double page in landscape only, mouse wheel, and protection against
+  accidental page turns.
 - **Progress, favorites, "to read" list, "up next"**, series marked as read.
 - **Sync** between the PC, the phone and the tablet, through a file on the NAS.
 - **Profiles**: each one has its own progress, lists and statistics ("Who's reading?" at launch).
 - **Statistics**: pages, reading time, streaks, favorite series and authors, and a **year in review**.
+  Comparison with the previous year, badges, profiles compared and library size over time.
+- **At random**: a never-opened book from a folder or a search, and a **Forgotten books** row.
 - **Custom home page** (rows and order), **English interface**, **bug report** to copy or share.
 - **Offline reading**: download a book or a whole series to the device to read it away from the NAS.
 - **Automatic updates** from the GitHub releases.

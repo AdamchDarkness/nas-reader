@@ -46,6 +46,7 @@ public class AppHost
             // On the PC, a list older than half a day still gets a fresh scan, as before.
             var shared = Library.AdoptShared(maxAgeDays: 0.5);
             if (!shared && (Settings.Current.ScanOnStartup || Library.Snapshot.Books.Count == 0)) Library.StartScan();
+            else if (shared && Settings.Current.ExtraFolders.Count > 0) Library.StartScan(extrasOnly: true);
             else if (Library.Snapshot.Books.Count > 0) Enricher.Restart();
         });
         return host;
@@ -109,7 +110,7 @@ public class AppHost
             enrichTotal = Enricher.Total,
             sync = new { enabled = Settings.Current.SyncEnabled, folder = Sync.Folder(Settings.Current), last = Sync.LastSync, error = Sync.LastError, version = Sync.Version },
             update = Updater.Status(),
-            nas = Reach.Nas(),
+            nas = Settings.Current.HasNas ? Reach.Nas() : (bool?)null,
             shared = new { uploaded = SharedCache.Uploaded, pending = SharedCache.Pending },
         }));
 
@@ -129,6 +130,19 @@ public class AppHost
         });
 
         app.MapPost("/api/scan", () => { Library.StartScan(); return Results.Ok(); });
+        // "Parcourir…" next to the other folders: the Windows folder picker, shown over the app window.
+        app.MapPost("/api/pick-folder", () =>
+        {
+            var form = System.Windows.Forms.Application.OpenForms.Cast<System.Windows.Forms.Form>().FirstOrDefault();
+            if (form == null) return Results.Json(new { path = (string?)null });
+            string? picked = null;
+            form.Invoke(() =>
+            {
+                using var dlg = new System.Windows.Forms.FolderBrowserDialog { Description = "Dossier de comics, mangas ou livres à ajouter", UseDescriptionForTitle = true, ShowNewFolderButton = false };
+                if (dlg.ShowDialog(form) == System.Windows.Forms.DialogResult.OK) picked = dlg.SelectedPath;
+            });
+            return Results.Json(new { path = picked });
+        });
 
         app.MapGet("/api/settings", () =>
         {
@@ -136,7 +150,7 @@ public class AppHost
             return Results.Json(new
             {
                 settings = s,
-                shares = Library.DiscoverShares(s.Nas),
+                shares = s.HasNas ? Library.DiscoverShares(s.Nas) : new List<string>(),
                 syncFolder = Sync.Folder(s),
                 cacheBytes = Books.CacheSize(),
                 dataFolder = Paths.Root,
@@ -218,7 +232,7 @@ public class AppHost
         {
             var book = Library.Get(id);
             if (book == null) return Results.NotFound();
-            if (Offline.File_(book) == null && !Reach.Nas())
+            if (Offline.File_(book) == null && Settings.Current.OnMainNas(book.Path) && !Reach.Nas())
                 return Results.Json(new { error = "Ce livre n'est pas téléchargé sur ce PC et la NAS n'est pas joignable. Il s'ouvrira de retour à la maison." }, statusCode: 503);
             try
             {

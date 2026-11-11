@@ -150,6 +150,7 @@ public static class Reach
         if (now - Interlocked.Read(ref _last) < 20_000) return _ok;
         Interlocked.Exchange(ref _last, now);
         var s = Settings.Current;
+        if (!s.HasNas) return _ok = false;
         _ok = new[] { s.Nas, s.Nas + ".local" }.Any(h =>
         {
             try

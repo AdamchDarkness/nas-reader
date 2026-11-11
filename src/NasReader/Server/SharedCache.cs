@@ -19,7 +19,7 @@ public static class SharedCache
     public static volatile int Uploaded;
     public static volatile int Pending;
 
-    static bool Enabled => Settings.Current.SyncEnabled;
+    static bool Enabled => Settings.Current.UsesSync;
     static string Dir => Sync.Folder(Settings.Current);
     static string CoversDir => Path.Combine(Dir, "covers");
 
@@ -113,13 +113,18 @@ public static class SharedCache
     /// <summary>After a scan, the list of books goes to the NAS: phones load it instead of scanning over Wi-Fi.</summary>
     public static void PushLibrary()
     {
-        if (!Enabled || Settings.Current.Roots.Count > 0) return; // only a scan of the whole NAS
+        var s = Settings.Current;
+        if (!Enabled || s.Roots.Count > 0) return; // only a scan of the whole NAS
         try
         {
             Directory.CreateDirectory(Dir);
             var dst = Path.Combine(Dir, "library.json");
-            File.Copy(Paths.LibraryFile, dst + $".{Environment.MachineName}.tmp", true);
-            File.Move(dst + $".{Environment.MachineName}.tmp", dst, true);
+            var tmp = dst + $".{Environment.MachineName}.tmp";
+            // Books from this PC's own folders or another NAS mean nothing to the other devices.
+            var snap = Library.Snapshot;
+            var shared = new LibrarySnapshot { Books = snap.Books.Where(b => s.OnMainNas(b.Path)).ToList(), ScannedAt = snap.ScannedAt };
+            File.WriteAllText(tmp, JsonSerializer.Serialize(shared, Json.Options));
+            File.Move(tmp, dst, true);
         }
         catch { }
     }

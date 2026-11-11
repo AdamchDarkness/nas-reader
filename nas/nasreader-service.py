@@ -30,7 +30,7 @@ import socket
 import sys
 import time
 
-EXTENSIONS = {".cbz", ".cbr", ".cb7", ".pdf", ".epub", ".mobi", ".azw3"}
+EXTENSIONS = {".cbz", ".cbr", ".cb7", ".cbt", ".cba", ".pdf", ".epub", ".mobi", ".azw3"}
 EXCLUDE = {"#recycle", "@eadir", "#snapshot", "_doublons", ".trash", "$recycle.bin"}
 # Same table as Library.cs / Library.kt: folder names that mark a section of the library.
 SECTIONS = {
@@ -91,9 +91,9 @@ def classify(nas, share_path, folder_parts, name, st):
             break
     sorted_ = kind is not None
     if kind is None:
-        kind = "comic" if fmt in ("cbz", "cbr", "cb7") else "ebook" if fmt in ("epub", "mobi", "azw3") else "pdf"
+        kind = "comic" if fmt in ("cbz", "cbr", "cb7", "cbt", "cba") else "ebook" if fmt in ("epub", "mobi", "azw3") else "pdf"
         crumbs = folders
-    elif kind == "ebook" and fmt in ("cbz", "cbr", "cb7"):
+    elif kind == "ebook" and fmt in ("cbz", "cbr", "cb7", "cbt", "cba"):
         kind = "comic"
     clean = []
     for c in crumbs:

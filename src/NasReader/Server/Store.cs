@@ -56,6 +56,16 @@ public class Settings
     /// <summary>Folder on the NAS holding userdata.json. Empty = \\nas\Comics Mangas Livre\.nasreader</summary>
     public string SyncFolder { get; set; } = "";
     public bool AutoUpdate { get; set; } = true;
+    /// <summary>
+    /// Other folders to read, besides the NAS: on this PC (D:\Comics) or on a friend's NAS (\\nas-ami\Comics).
+    /// Nas Reader only reads them; their books stay out of the list shared with the phone and the tablet.
+    /// </summary>
+    public List<string> ExtraFolders { get; set; } = new();
+
+    [JsonIgnore] public bool HasNas => !string.IsNullOrWhiteSpace(Nas);
+    /// <summary>Sync and the shared covers and list need the home NAS.</summary>
+    [JsonIgnore] public bool UsesSync => SyncEnabled && HasNas;
+    public bool OnMainNas(string path) => HasNas && path.StartsWith($@"\\{Nas}\", StringComparison.OrdinalIgnoreCase);
 
     static readonly object Gate = new();
     static Settings? _current;

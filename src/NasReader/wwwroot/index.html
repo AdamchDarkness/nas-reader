@@ -313,7 +313,8 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 .rbtn.on { background: #ffd23f; color: #17140a; }
 .rbtn .ico { width: 18px; height: 18px; }
 .rtitle { min-width: 0; flex: 1; display: flex; flex-direction: column; }
-.rtitle b { font: 800 22px/1 var(--display); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rtitle b { font: 700 17px/1.25 var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rtitle b .rsub { font-weight: 400; color: #aab0c2; }
 .rtitle small { color: #8a90a6; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rgroup { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(255,255,255,.05); }
 .rgroup .rbtn { background: none; height: 30px; }
@@ -467,6 +468,23 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
 .rank .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rank .n { font: 400 12px var(--mono); color: var(--muted); }
 .rank .meterl { height: 4px; border-radius: 4px; background: var(--accent); flex: none; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.badge { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.badge .ico { width: 22px; height: 22px; color: var(--muted); }
+.badge b { font: 800 26px/1 var(--display); }
+.badge small { color: var(--muted); font-size: 12.5px; }
+.badge.on { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); }
+.badge.on .ico { color: var(--accent); }
+.badge.next { border-style: dashed; }
+.badge .bar { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 4px; }
+.badge .bar i { display: block; height: 100%; background: var(--accent); }
+.delta { display: block; font: 600 11.5px var(--mono); color: var(--muted); margin-top: 2px; }
+.delta.up { color: #2ea44f; } .delta.down { color: #d1453b; }
+.cmp { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cmp th, .cmp td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.cmp th:first-child, .cmp td:first-child { text-align: left; }
+.cmp th { font: 600 11px var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.cmp td:first-child { display: flex; align-items: center; gap: 10px; font-weight: 600; }
 .wrapped { position: relative; overflow: hidden; border-radius: 18px; padding: clamp(22px, 4vw, 44px); background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, var(--panel)) 0%, var(--panel) 60%); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 24px; }
 .wrapped::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(var(--dot) 1.6px, transparent 1.8px); background-size: 11px 11px; }
 .wrapped > * { position: relative; }
@@ -542,6 +560,9 @@ mark { background: color-mix(in srgb, var(--accent) 40%, transparent); color: in
     <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
     <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="m8.2 10.8 7.6-4M8.2 13.2l7.6 4"/></symbol>
+    <symbol id="i-timer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5M9.5 3h5M12 3v3"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></symbol>
+    <symbol id="i-medal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="5.5"/><path d="M8.5 10 6 3h4l2 4 2-4h4l-2.5 7"/><path d="m12 12 .9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z"/></symbol>
     <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6L3.5 8.5M3.5 4v4.5H8M12 7.5V12l3 2"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
   </defs>
@@ -635,7 +656,7 @@ const S = {
   // Everything from the shared file: progress and lists of every profile, and the small shared values (kv).
   raw: { progress: {}, lists: { favorites: [], toread: [] }, kv: {} },
   profile: store.get("profile", ""),
-  filters: { fmt: null, state: null, dl: false, pub: null },
+  filters: { fmt: null, state: null, dl: false, pub: null, lang: null },
 };
 
 /* ======================================================================= profiles & shared values */
@@ -721,8 +742,8 @@ function flushHist() {
 setInterval(flushHist, 60000);
 addEventListener("pagehide", flushHist);
 /** Reading log of the current profile, all devices added up, by day. */
-function readingDays() {
-  const pid = S.profile || "main", days = {};
+function readingDays(pid = S.profile || "main") {
+  const days = {};
   for (const [k, e] of Object.entries(S.raw.kv)) {
     if (!k.startsWith("hist:") || !e.value) continue;
     const [, , p, day] = k.split(":");
@@ -738,26 +759,73 @@ function readingDays() {
 function cleanName(s) {
   let t = String(s).replace(/^0{2,}\s+/, "");
   if (!/\s/.test(t) && /[._]/.test(t)) t = t.replace(/(\d)\.(\d)/g, "$1․$2").replace(/[._]+/g, " ").replace(/․/g, ".");
-  t = t.replace(/(\s*[-.\s]\s*(cbr|cbz|cb7|pdf|epub|jpg))+\s*$/i, "");
+  t = t.replace(/(\s*[-.\s]\s*(cbr|cbz|cb7|cbt|cba|pdf|epub|jpg))+\s*$/i, "");
   return t.replace(/\s+/g, " ").trim() || String(s);
 }
 
+/* ---- titles: scene file names become readable ones ----
+   "Comics.FR.-.Strange Academy - 03 - La Magie des Vœux (Panini - 100% Marvel) [Digital-2940] (RIP-Club)"
+   → "Strange Academy #3", subtitle "La Magie des Vœux", French. */
+const NOISE = /digital|empire|dcp|upscal|\bcovers?\b|\brip\b|c2c|scan|\bhd\b|panini|urban|semic|marvel france|gl[ée]nat|kana|delcourt|dargaud|soleil|anthologie|marvel now|100% marvel|marvel deluxe|club|^\s*(vo|vf|fr|en|eng|us)\s*$/i;
+const VF_HINT = /panini|urban|semic|marvel france|gl[ée]nat|kana|delcourt|dargaud|soleil|\bfr\b|\bvf\b|french|fran[cç]ais/i;
+const VO_HINT = /empire|dcp|walkabout|\bvo\b|\bus\b|\beng?\b|english/i;
+const NUM_WORD = /\b(episode|épisode|chapitre|partie|part|book|livre|volume|vol\.?|cycle|saison|season)$/i;
+/** Value of an issue number for sorting: "1/2" and "½" come before 1. */
+function numValue(n) {
+  if (n == null) return null;
+  n = String(n).trim();
+  if (n === "½") return 0.5;
+  const f = n.match(/^(\d+)\s*\/\s*(\d+)$/); if (f) return +f[1] / Math.max(1, +f[2]);
+  const v = parseFloat(n.replace(",", "."));
+  return isNaN(v) ? null : v;
+}
+function parseTitle(raw, kind) {
+  let t = cleanName(raw), lang = null, order = null, author = null;
+  if (t.includes(" -- ")) { const p = t.split(" -- "); t = p[0]; author = p[1]; }
+  t = t.replace(/^(comics|mangas?|bd|ebooks?)[ .]fr[ .]-[ .]?/i, () => { lang = "VF"; return ""; });
+  const mo = kind === "ebook" ? t.match(/^(\d{1,4})\s*[.\-]\s+(.+)$/) : t.match(/^(\d{1,4})(?:\s*[.\-_]+\s*_?|\s+-\s+)(?=[^\d\s])(.+)$/);
+  if (mo) { order = +mo[1]; t = mo[2]; }
+  t = t.replace(/\[[^\]]*\]/g, " ").replace(/\(([^()]*)\)/g, (all, c) => {
+    if (VF_HINT.test(c)) lang ||= "VF"; else if (VO_HINT.test(c)) lang ||= "VO";
+    return NOISE.test(c) ? " " : all;
+  }).replace(/\(\s*\)/g, " ").replace(/\s+/g, " ").trim();
+  t = t.replace(/\s+(fr|vf|vo)$/i, (_, l) => { lang ||= l.toLowerCase() === "vo" ? "VO" : "VF"; return ""; });
+  // The year right after an issue number says nothing more: "Absolute Batman 012 (2025)".
+  t = t.replace(/(\d)\s*\((?:19|20)\d\d\)$/, "$1").replace(/[\s\-–:]+$/, "");
+  // SHOUTED NAMES are hard to read.
+  if (t.length > 6 && !/[a-zà-ÿ]/.test(t) && /[A-Z]{3}/.test(t)) t = t.toLowerCase().replace(/(^|[\s\-(«"'.])(\p{L})/gu, (_, a, c) => a + c.toUpperCase());
+  let series = null, num = null, sub = null, issue = null, m;
+  const N = "(\\d{1,4}(?:[.,]\\d+)?(?:\\/\\d+)?|½)";
+  if ((m = t.match(new RegExp(`^(.*?)\\s*#\\s?${N}(?:\\s*[-:]\\s+(.+))?$`)))) { [, series, num, sub] = m; }
+  else if ((m = t.match(/\b(?:T|Tome|Vol\.?|n°)\s?(\d+)\b/i))) { num = m[1]; issue = "T" + m[1]; }
+  else if (kind !== "ebook" && kind !== "pdf" && (m = t.match(/^(.+?)\s+-\s+(\d{1,3}(?:[.,]\d)?)(?:\s+-\s+(.+))?$/))) { [, series, num, sub] = m; }
+  else if ((kind === "comic" || kind === "manga" || kind === "webtoon") && (m = t.match(/^(.*?[^\d\s\-#])\s+(\d{1,3}(?:\/\d+)?)(?:\s+-\s+(.+))?$/))) { [, series, num, sub] = m; }
+  let display = t;
+  if (num != null && !issue) {
+    const n = num.replace(/^0+(?=\d)/, "");
+    series = (series || "").replace(/[\s\-–:]+$/, "");
+    issue = "#" + n;
+    if (series) display = NUM_WORD.test(series) ? `${series} ${n}` : `${series} #${n}`;
+  }
+  return { display, issue, num: numValue(num), sub: sub || null, lang, order, author };
+}
+const langOf = b => { const c = b.crumbs.join(" "); return /\bvf\b|version fran/i.test(c) ? "VF" : /\bvo\b|version originale|\bus\b/i.test(c) ? "VO" : null; };
+
 function enrich(b) {
   const m = S.meta[b.id] || null;
-  let t = cleanName(b.title), author = null, order = null;
-  if (t.includes(" -- ")) { const p = t.split(" -- "); t = p[0]; author = p[1]; }
-  const mo = t.match(/^(\d{1,4})\s*[.\-]\s+(.+)$/); if (mo) { order = +mo[1]; t = mo[2]; }
-  const mi = t.match(/#\s?(\d+(?:[.,]\d+)?)/);
-  const mt = !mi && t.match(/\b(?:T|Tome|Vol\.?|n°)\s?(\d+)\b/i);
-  b.display = t;
-  b.issue = mi ? "#" + mi[1] : mt ? "T" + mt[1] : null;
-  b.subtitle = null; b.year = null; b.meta = m;
+  const pt = parseTitle(b.title, b.kind);
+  let author = pt.author;
+  const order = pt.order;
+  b.display = pt.display; b.issue = pt.issue; b.num = pt.num;
+  b.lang = pt.lang || langOf(b);
+  b.annual = /\bannuals?\b/i.test(b.title);
+  b.subtitle = pt.sub; b.year = null; b.meta = m;
   if (m) {
     if (b.kind === "ebook") {
       if (m.title) b.display = m.title;
       if (m.number) b.issue = "T" + m.number;
     } else if (m.series && m.number) {
-      b.display = `${m.series} #${m.number}`; b.issue = "#" + m.number;
+      b.display = `${m.series} #${m.number}`; b.issue = "#" + m.number; b.num = numValue(m.number);
       if (m.title) b.subtitle = m.title;
     } else if (m.title && !b.issue) b.subtitle = m.title;
     if (m.writer && !author) author = m.writer;
@@ -777,7 +845,7 @@ function enrich(b) {
 /* The same book often exists twice (a CBR folder and a PDF folder, or a copy in Downloads):
    keep one card per book and offer the other files as alternative versions. */
 const FMT_TOKENS = /\b(cbr|cbz|cb7|pdf|epub|mobi|azw3|jpg|jpeg)\b/g;
-const FMT_RANK = { cbz: 0, epub: 0, cbr: 1, cb7: 2, pdf: 3, mobi: 4, azw3: 5 };
+const FMT_RANK = { cbz: 0, epub: 0, cbr: 1, cb7: 2, cbt: 2, cba: 3, pdf: 3, mobi: 4, azw3: 5 };
 function dedupe(books) {
   const p = books.map((_, i) => i);
   const find = i => { while (p[i] !== i) { p[i] = p[p[i]]; i = p[i]; } return i; };
@@ -809,7 +877,8 @@ const isDone = p => p && p.page >= p.pages - 1;
 const inList = (list, b) => versions(b).some(v => S.lists[list].includes(v.id));
 
 /* ---- offline copies ---- */
-const isSmb = b => b.path.startsWith("\\\\");
+/** On the home NAS (other folders, on this PC or a friend's NAS, do not depend on it). */
+const isSmb = b => b.path.startsWith("\\\\") && (!S.nas || b.path.toLowerCase().startsWith(`\\\\${S.nas.toLowerCase()}\\`));
 /** The version of a book kept on this device, if any. */
 const offlineVersion = b => versions(b).find(v => S.offline.done[v.id] != null) || null;
 const dlJob = b => versions(b).map(v => S.offline.active[v.id]).find(Boolean) || null;
@@ -871,10 +940,38 @@ function watchDownloads() {
   }, 1500);
 }
 
+/**
+ * One folder holding two runs of a series ("Daredevil 018 (1966)" and "Daredevil 018 (2025)"):
+ * each run becomes its own sub-folder, named after the year it starts.
+ */
+function splitVolumes(n) {
+  if (n.books.length < 4 || !["comic", "manga", "webtoon"].includes(n.kind)) return;
+  const dated = n.books.filter(b => b.num != null && !b.annual && (b.vy = +(b.title.match(/\((19[3-9]\d|20[0-4]\d)\)/) || [])[1] || 0));
+  if (dated.length < 4 || new Set(dated.map(b => b.num)).size === dated.length) return;
+  dated.sort((a, b) => a.vy - b.vy || a.num - b.num);
+  const vols = []; let cur = null;
+  for (const b of dated) {
+    if (!cur || cur.nums.has(b.num) || b.num < cur.max - 3) { cur = { year: b.vy, books: [], nums: new Set(), max: 0 }; vols.push(cur); }
+    cur.books.push(b); cur.nums.add(b.num); cur.max = Math.max(cur.max, b.num);
+  }
+  if (vols.length < 2) return;
+  const names = new Set();
+  for (const v of vols) {
+    let name = `${n.name} (${v.year})`;
+    for (let k = 2; names.has(name) || n.children.has(name); k++) name = `${n.name} (${v.year}, ${k})`;
+    names.add(name);
+    const ch = mkNode(name, n, [...n.path, name], n.kind);
+    ch.books = v.books; ch.count = v.books.length; ch.latest = Math.max(...v.books.map(b => b.mtime));
+    v.books.forEach(b => { b.vnode = ch; });
+    n.children.set(name, ch);
+  }
+  const moved = new Set(dated);
+  n.books = n.books.filter(b => !moved.has(b));
+}
 function mkNode(name, parent, path, kind) { return { name, label: cleanName(name), parent, path, kind, children: new Map(), books: [], count: 0, latest: 0 }; }
 function buildTrees() {
   S.trees = {}; S.byId = {};
-  S.books.forEach(b => { S.byId[b.id] = b; });
+  S.books.forEach(b => { S.byId[b.id] = b; b.vnode = null; });
   dedupe(S.books);
   S.visible = S.books.filter(b => !b.dupOf);
   for (const b of S.visible) {
@@ -887,11 +984,13 @@ function buildTrees() {
     }
     node.books.push(b);
   }
-  const num = b => parseFloat(String(b.meta?.number).replace(",", "."));
   const walk = n => {
-    // Issue numbers from ComicInfo give the true reading order when every book has one.
-    if (n.books.length > 1 && n.books.every(b => !isNaN(num(b))))
-      n.books.sort((a, b) => (+a.meta.volume || 0) - (+b.meta.volume || 0) || num(a) - num(b) || (a.key < b.key ? -1 : 1));
+    splitVolumes(n);
+    // Issue numbers (ComicInfo or file name) give the reading order: #0, #1/2, #1… then the annuals.
+    // A reading-order prefix ("23. Amazing Spider-Man #673") wins: the name order already follows it.
+    const numbered = n.books.filter(b => b.num != null).length, ordered = n.books.filter(b => b.order != null).length;
+    if (n.books.length > 1 && numbered >= n.books.length * 0.8 && ordered < n.books.length * 0.8)
+      n.books.sort((a, b) => (a.annual ? 1 : 0) - (b.annual ? 1 : 0) || (+a.meta?.volume || 0) - (+b.meta?.volume || 0) || (a.num ?? 1e9) - (b.num ?? 1e9) || (a.key < b.key ? -1 : 1));
     else n.books.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     n.list = [...n.children.values()].sort((a, b) => natKey(a.label) < natKey(b.label) ? -1 : 1);
     n.list.forEach(walk);
@@ -905,7 +1004,7 @@ function firstBooks(node, k = 3) {
   const visit = n => { for (const b of n.books) { if (out.length >= k) return; out.push(b); } for (const c of n.list) { if (out.length >= k) return; visit(c); } };
   visit(node); return out;
 }
-function nodeOf(b) { return nodeAt(b.kind, b.crumbs); }
+function nodeOf(b) { return b.vnode || nodeAt(b.kind, b.crumbs); }
 
 /* ======================================================================= covers */
 const coverCache = new Map();
@@ -1068,13 +1167,13 @@ function renderRail() {
   const on = (v, k, p) => r.view === v && (k == null || r.kind === k) && (p == null || (r.path || [])[0] === p) ? "on" : "";
   const pubs = sortedPubs(S.trees.comic);
   const st = S.status;
-  const nas = S.nas || "lord_of_adam";
+  const nasLbl = S.nas === "" ? "Ce PC" : "\\\\" + (S.nas || "lord_of_adam");
   const led = !S.online ? "off" : st.scanning ? "busy" : "";
   const kindBtn = k => S.trees[k] ? `<button class="${on("browse", k) && !(r.path || []).length ? "on" : ""}" data-go="${k}">${ico(KINDS[k].icon)}${KINDS[k].label}<span class="n">${fmtN(S.trees[k].count)}</span></button>` : "";
   const listBtn = (l, icon, label) => `<button class="${r.view === "list" && r.list === l ? "on" : ""}" data-list="${l}">${ico(icon)}${label}<span class="n">${fmtN(listBooks(l).length)}</span></button>`;
   const enrich = st.enriching && st.enrichTotal ? `<div class="scanbox"><b><span class="led busy"></span>Couvertures et fiches</b>${fmtN(st.enrichDone)} / ${fmtN(st.enrichTotal)} préparées<div class="meter"><i style="animation:none;width:${Math.round(100 * st.enrichDone / st.enrichTotal)}%"></i></div></div>` : "";
   $("#rail").innerHTML = `
-    <div class="brand"><div class="brand-mark"></div><div><b>Nas Reader</b><small><span class="led ${led}"></span>\\\\${esc(nas)}</small></div></div>
+    <div class="brand"><div class="brand-mark"></div><div><b>Nas Reader</b><small><span class="led ${led}"></span>${esc(nasLbl)}</small></div></div>
     <nav class="nav">
       <div class="nav-label">Bibliothèque</div>
       <button class="${on("home")}" data-go="home">${ico("home")}Accueil</button>
@@ -1209,7 +1308,7 @@ function listBooks(l) {
 
 /** Rows of the home page, in their default order; the order and which ones show are set in Réglages. */
 const HOME_ROWS = [
-  ["hero", "Reprendre la lecture"], ["upnext", "À suivre"], ["reading", "En cours"], ["toread", "À lire"], ["favorites", "Favoris"],
+  ["hero", "Reprendre la lecture"], ["upnext", "À suivre"], ["reading", "En cours"], ["forgotten", "Livres oubliés"], ["toread", "À lire"], ["favorites", "Favoris"],
   ["universes", "Univers comics"], ["recent", "Ajoutés récemment"], ["manga", "Mangas"], ["webtoon", "Webtoons"], ["ebook", "Ebooks"],
   ["magazine", "Magazines"], ["week", "Ta semaine de lecture"], ["stats", "Chiffres de la bibliothèque"],
 ];
@@ -1260,6 +1359,10 @@ function renderHome(v) {
         </div></section>`;
     },
     upnext: () => next.length ? shelf("À suivre", "le numéro suivant de tes séries", next.slice(0, 24).map(x => bookCard(x.b)).join("")) : "",
+    forgotten() {
+      const old = inProg.filter(x => Date.now() - x.p.updated > 365 * 864e5);
+      return old.length ? shelf("Livres oubliés", "commencés il y a plus d'un an", old.slice(0, 24).map(x => bookCard(x.b)).join("")) : "";
+    },
     reading: () => inProg.length > 1 ? shelf("En cours", `${inProg.length} titres`, inProg.slice(1, 25).map(x => bookCard(x.b)).join("")) : "",
     toread: () => listRow("toread", "À lire"),
     favorites: () => listRow("favorites", "Favoris"),
@@ -1324,8 +1427,8 @@ function longestStreak(list) {
 }
 const MONTHS = () => Array.from({ length: 12 }, (_, i) => new Date(2000, i, 1).toLocaleString(LOCALE, { month: "short" }).replace(".", ""));
 /** One year of the reading log of this profile. */
-function yearSummary(year) {
-  const all = Object.values(readingDays());
+function yearSummary(year, pid) {
+  const all = Object.values(readingDays(pid));
   const days = all.filter(d => d.day.startsWith(year + "-"));
   const finished = new Set(), opened = new Set();
   days.forEach(d => { d.f.forEach(x => finished.add(x)); d.b.forEach(x => opened.add(x)); });
@@ -1370,10 +1473,72 @@ function rankBox(title, entries, label, click) {
   return `<div class="rank"><h3>${title}</h3>${entries.slice(0, 6).map(([k, e]) => `<${click ? "button" : "div class=\"r\""} ${click ? click(k, e) : ""}>
     <span class="grow">${esc(label(k, e))}</span><span class="meterl" style="width:${Math.round(60 * e.n / max)}px"></span><span class="n">${fmtN(e.n)}</span></${click ? "button" : "div"}>`).join("")}</div>`;
 }
+/* ---- badges ---- */
+const BADGES = [
+  { k: "books", label: n => `${fmtN(n)} livre${n > 1 ? "s" : ""} terminé${n > 1 ? "s" : ""}`, steps: [1, 10, 25, 50, 100, 250, 500, 1000, 2500] },
+  { k: "pages", label: n => `${fmtN(n)} pages lues`, steps: [1000, 5000, 10000, 25000, 50000, 100000] },
+  { k: "streak", label: n => `${fmtN(n)} jours d'affilée`, steps: [3, 7, 14, 30, 100, 365] },
+  { k: "series", label: n => `${fmtN(n)} série${n > 1 ? "s" : ""} terminée${n > 1 ? "s" : ""}`, steps: [1, 5, 10, 25, 50] },
+];
+/** Totals of this profile since the start: what the badges are earned with. */
+function lifeTotals() {
+  const all = Object.values(readingDays());
+  const fin = new Set(); all.forEach(d => d.f.forEach(x => fin.add(S.byId[x]?.dupOf || x)));
+  const groups = new Map();
+  for (const b of S.visible) { const n = nodeOf(b); if (!n || !n.path.length) continue; const g = groups.get(n) || []; g.push(b); groups.set(n, g); }
+  const series = [...groups.values()].filter(g => g.length > 1 && g.every(b => isDone(progOf(b)))).length;
+  return { books: Math.max(fin.size, S.visible.filter(b => isDone(progOf(b))).length), pages: all.reduce((n, d) => n + d.p, 0), streak: longestStreak(all), series };
+}
+function badgesHtml() {
+  const t = lifeTotals();
+  const cards = [];
+  for (const g of BADGES) {
+    const v = t[g.k], got = g.steps.filter(x => v >= x), next = g.steps.find(x => v < x);
+    if (got.length) cards.push(`<div class="badge on">${ico("medal")}<b>${fmtN(got[got.length - 1])}</b><small>${g.label(got[got.length - 1]).replace(/^[\d\s  .,]+/, "")}</small></div>`);
+    if (next) cards.push(`<div class="badge next">${ico("medal")}<b>${fmtN(next)}</b><small>${g.label(next).replace(/^[\d\s  .,]+/, "")} · encore ${fmtN(next - v)}</small><div class="bar"><i style="width:${Math.round(100 * v / next)}%"></i></div></div>`);
+  }
+  const earned = BADGES.reduce((n, g) => n + g.steps.filter(x => t[g.k] >= x).length, 0), total = BADGES.reduce((n, g) => n + g.steps.length, 0);
+  return `<section class="sec"><div class="sec-head"><h2>Badges</h2><span class="meta">${fmtN(earned)} sur ${fmtN(total)} · le dernier gagné et le prochain de chaque sorte</span></div><div class="badges">${cards.join("")}</div></section>`;
+}
+/** "+12 % par rapport à 2025", only when the year before has something to compare to. */
+function delta(cur, prev, year) {
+  if (!prev) return "";
+  const d = Math.round(100 * (cur - prev) / prev);
+  return `<span class="delta ${d > 0 ? "up" : d < 0 ? "down" : ""}">${d > 0 ? "+" : ""}${d} % vs ${year - 1}</span>`;
+}
+function compareHtml(year) {
+  const ps = profiles();
+  if (ps.length < 2) return "";
+  const on = store.get("statsCompare", false);
+  const head = `<div class="sec-head"><h2>Profils comparés</h2><span class="meta">${year}</span><span class="spacer"></span><button class="chip ${on ? "on" : ""}" data-act="stats-compare">${on ? "Masquer" : "Afficher"}</button></div>`;
+  if (!on) return `<section class="sec">${head}</section>`;
+  const rows = ps.map(p => ({ p, y: yearSummary(year, p.id || "main") })).sort((a, b) => b.y.pages - a.y.pages);
+  return `<section class="sec">${head}<div style="overflow-x:auto"><table class="cmp"><thead><tr><th>Profil</th><th>Pages</th><th>Temps</th><th>Terminés</th><th>Jours</th><th>Record</th></tr></thead><tbody>
+    ${rows.map(({ p, y }) => `<tr><td><span class="pdot" style="background:${esc(p.color || "#888")};width:10px;height:10px;border-radius:50%;display:inline-block"></span>${esc(p.name)}</td><td>${fmtN(y.pages)}</td><td>${duration(y.secs)}</td><td>${fmtN(y.finished.length)}</td><td>${fmtN(y.readDays)}</td><td>${fmtN(y.longest)}</td></tr>`).join("")}
+  </tbody></table></div></section>`;
+}
+/** Titles added month by month over two years, from the files' dates. */
+function growthHtml() {
+  const books = S.visible.filter(b => b.mtime);
+  if (books.length < 2) return "";
+  const now = new Date(), months = [], labels = [];
+  for (let i = 23; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i + 1, 1); months.push(d.getTime()); labels.push(new Date(now.getFullYear(), now.getMonth() - i, 1).toLocaleDateString(LOCALE, { month: "short", year: "2-digit" })); }
+  const ms = b => b.mtime > 1e12 ? b.mtime : b.mtime * 1000;
+  const counts = months.map(end => books.filter(b => ms(b) < end).length);
+  const size = S.visible.reduce((n, b) => n + (b.size || 0), 0);
+  const yearAgo = counts[11], added = counts[23] - yearAgo;
+  return `<section class="sec"><div class="sec-head"><h2>Taille de la bibliothèque</h2><span class="meta">titres présents à la fin de chaque mois, d'après la date des fichiers</span></div>
+    <div class="tiles"><div class="tile"><b>${fmtN(S.visible.length)}</b><small>titres</small></div><div class="tile"><b>${bytes(size)}</b><small>sur le disque</small></div><div class="tile"><b>+${fmtN(added)}</b><small>titres en 12 mois</small></div></div>
+    <div class="chart">${barChart(counts, labels, "titres")}</div></section>`;
+}
 function renderStats(v, r) {
   const now = new Date(), year = r.year || now.getFullYear();
-  const y = yearSummary(year);
+  const y = yearSummary(year), py = yearSummary(year - 1);
   const years = [...new Set([now.getFullYear(), ...y.all.map(d => +d.day.slice(0, 4))])].sort((a, b) => b - a);
+  // The current year is compared with the same dates last year, not with the whole year.
+  const cut = year === now.getFullYear() ? dayKey(Date.now()).slice(4) : "-12-31";
+  const pd = py.days.filter(d => d.day.slice(4) <= cut);
+  const prev = { pages: pd.reduce((n, d) => n + d.p, 0), secs: pd.reduce((n, d) => n + d.s, 0), fin: new Set(pd.flatMap(d => [...d.f])).size, days: pd.filter(d => d.p).length };
   const days = readingDays();
   const last30 = Array.from({ length: 30 }, (_, i) => dayKey(Date.now() - (29 - i) * 864e5));
   const allDone = S.visible.filter(b => isDone(progOf(b))).length;
@@ -1382,17 +1547,19 @@ function renderStats(v, r) {
     <div class="toolbar">${years.map(x => `<button class="chip ${x === year ? "on" : ""}" data-go="stats" data-year="${x}">${x}</button>`).join("")}
       <span class="spacer"></span><button class="btn primary" data-go="wrapped" data-year="${year}">${ico("play")}Bilan de l'année ${year}</button></div></section>
     <div class="tiles">
-      <div class="tile"><b>${fmtN(y.pages)}</b><small>pages lues</small></div>
-      <div class="tile"><b>${duration(y.secs)}</b><small>de lecture</small></div>
-      <div class="tile"><b>${fmtN(y.finished.length)}</b><small>livre${y.finished.length > 1 ? "s" : ""} terminé${y.finished.length > 1 ? "s" : ""}</small></div>
+      <div class="tile"><b>${fmtN(y.pages)}</b><small>pages lues${delta(y.pages, prev.pages, year)}</small></div>
+      <div class="tile"><b>${duration(y.secs)}</b><small>de lecture${delta(y.secs, prev.secs, year)}</small></div>
+      <div class="tile"><b>${fmtN(y.finished.length)}</b><small>livre${y.finished.length > 1 ? "s" : ""} terminé${y.finished.length > 1 ? "s" : ""}${delta(y.finished.length, prev.fin, year)}</small></div>
       <div class="tile"><b>${fmtN(y.read.length)}</b><small>livre${y.read.length > 1 ? "s" : ""} ouvert${y.read.length > 1 ? "s" : ""}</small></div>
-      <div class="tile"><b>${fmtN(y.readDays)}</b><small>jour${y.readDays > 1 ? "s" : ""} de lecture</small></div>
+      <div class="tile"><b>${fmtN(y.readDays)}</b><small>jour${y.readDays > 1 ? "s" : ""} de lecture${delta(y.readDays, prev.days, year)}</small></div>
       <div class="tile"><b>${fmtN(year === now.getFullYear() ? streak(days) : y.longest)}</b><small>${year === now.getFullYear() ? `jours d'affilée en ce moment · record ${fmtN(y.longest)}` : "jours d'affilée au plus"}</small></div>
     </div>
     ${year === now.getFullYear() ? `<section class="sec"><div class="sec-head"><h2>30 derniers jours</h2><span class="meta">pages lues par jour</span></div>
       <div class="chart">${barChart(last30.map(d => days[d]?.p || 0), last30.map(d => new Date(d + "T12:00:00").toLocaleDateString(LOCALE, { day: "numeric", month: "short" })), "pages")}</div></section>` : ""}
     <section class="sec"><div class="sec-head"><h2>Mois par mois</h2><span class="meta">pages lues en ${year}</span></div>
       <div class="chart">${barChart(y.months, MONTHS(), "pages")}</div></section>
+    ${badgesHtml()}
+    ${compareHtml(year)}
     <div class="ranks">
       ${rankBox("Séries les plus lues", y.series, k => cleanName(JSON.parse(k)[1].slice(-1)[0]), k => `data-folder="${esc(k)}"`)}
       ${rankBox("Univers", y.pubs, k => cleanName(k))}
@@ -1402,6 +1569,7 @@ function renderStats(v, r) {
       <div class="tiles"><div class="tile"><b>${fmtN(allDone)}</b><small>titres lus sur ${fmtN(S.visible.length)}</small></div>
       <div class="tile"><b>${S.visible.length ? (100 * allDone / S.visible.length).toLocaleString(LOCALE, { maximumFractionDigits: 1 }) : 0} %</b><small>de la bibliothèque lue</small></div>
       <div class="tile"><b>${fmtN(inProgress().length)}</b><small>en cours</small></div></div></section>
+    ${growthHtml()}
     ${!y.all.length ? `<p class="approx">Les pages et le temps de lecture sont comptés depuis la version 1.4 de Nas Reader, sur chaque appareil, et additionnés grâce à la synchronisation.</p>` : ""}`);
   $$(".chart", v).forEach(c => c.addEventListener("mouseover", e => { const t = e.target.closest("[data-tip]"); if (t) c.querySelector(".tip").textContent = t.dataset.tip; }));
   $$(".chart", v).forEach(c => c.addEventListener("click", e => { const t = e.target.closest("[data-tip]"); if (t) c.querySelector(".tip").textContent = t.dataset.tip; }));
@@ -1494,6 +1662,7 @@ function renderBrowse(v, r) {
         return `<button class="btn ghost" data-act="series-offline" data-v="1">${ico("download")}Télécharger ${nf ? "tout" : "la série"} (${missing.length} · ${bytes(missing.reduce((n, b) => n + b.size, 0))})</button>`;
       })() : ""}
       <button class="btn ghost" data-act="series-read" data-v="${allDone ? 0 : 1}">${ico(allDone ? "undo" : "check")}${allDone ? "Marquer comme non lu" : `Marquer ${nf ? "tout" : "la série"} comme lu`}</button>
+      ${all.length > 1 ? `<button class="btn ghost" data-act="random" data-scope="browse" title="Un livre jamais ouvert, au hasard">${ico("dice")}Au hasard</button>` : ""}
       <span class="spacer"></span>
       <button class="chip ${S.sort === "name" ? "on" : ""}" data-sort="name">A → Z</button>
       <button class="chip ${S.sort === "recent" ? "on" : ""}" data-sort="recent">Récents</button>
@@ -1522,9 +1691,10 @@ function renderBrowse(v, r) {
 function missingNumbers(books) {
   if (books.length < 3) return null;
   const nums = [], prefixes = {};
+  books = books.filter(b => !b.annual);
+  if (books.length < 3) return null;
   for (const b of books) {
-    const m = b.meta?.number ?? (b.issue || "").replace(/^[#T]/, "");
-    const n = parseFloat(String(m).replace(",", "."));
+    const n = b.num ?? NaN;
     if (!isNaN(n) && Number.isInteger(n) && n >= 0 && n < 5000) nums.push(n);
     const p = (b.issue || "#")[0]; prefixes[p] = (prefixes[p] || 0) + 1;
   }
@@ -1613,12 +1783,13 @@ function matchBook(b, toks) {
   }
   return fuzzy ? 2 : 1;
 }
-const filtersOn = () => !!(S.filters.fmt || S.filters.state || S.filters.dl || S.filters.pub || S.filterKind);
+const filtersOn = () => !!(S.filters.fmt || S.filters.state || S.filters.dl || S.filters.pub || S.filters.lang || S.filterKind);
 function passFilters(b) {
   const f = S.filters;
   if (S.filterKind && b.kind !== S.filterKind) return false;
   if (f.fmt && !versions(b).some(v => v.fmt === f.fmt)) return false;
   if (f.pub && b.pub !== f.pub) return false;
+  if (f.lang && b.lang !== f.lang) return false;
   if (f.dl && !offlineVersion(b)) return false;
   if (f.state) {
     const p = progOf(b);
@@ -1695,12 +1866,14 @@ function renderSearch(v) {
       ${chip("state", null, f.state, "Tout")}${chip("state", "unread", f.state, "Non lus")}${chip("state", "reading", f.state, "En cours")}${chip("state", "done", f.state, "Lus")}
       <button class="chip ${f.dl ? "on" : ""}" data-flt="dl">${ico("offline").replace('class="ico"', 'class="ico" style="width:14px;height:14px;vertical-align:-2px"')} Téléchargés</button>
     </div>
+    ${S.visible.some(b => b.lang) ? `<div class="toolbar"><span class="lbl">Langue</span>${chip("lang", null, f.lang, "Toutes")}${chip("lang", "VF", f.lang, "VF (français)")}${chip("lang", "VO", f.lang, "VO (version originale)")}</div>` : ""}
     <div class="toolbar"><span class="lbl">Format</span>
       ${chip("fmt", null, f.fmt, "Tous")}${fmts.map(x => chip("fmt", x, f.fmt, x.toUpperCase())).join("")}
       ${pubs.length ? `<select class="chip ${f.pub ? "on" : ""}" id="fltPub" aria-label="Éditeur"><option value="">Tous les éditeurs</option>${pubs.map(p => `<option value="${esc(p)}" ${f.pub === p ? "selected" : ""}>${esc(cleanName(p))}</option>`).join("")}</select>` : ""}
       ${filtersOn() ? `<span class="spacer"></span><button class="chip" data-flt="reset">${ico("close").replace('class="ico"', 'class="ico" style="width:14px;height:14px;vertical-align:-2px"')} Effacer les filtres</button>` : ""}
     </div></div></section>`);
   $("#fltPub")?.addEventListener("change", e => { S.filters.pub = e.target.value || null; render(); });
+  if (books.length > 1) v.querySelector(".bhead .filters").insertAdjacentHTML("beforeend", `<div class="toolbar"><button class="btn ghost" data-act="random" data-scope="search" title="Un livre jamais ouvert parmi ces résultats">${ico("dice")}Au hasard parmi ces résultats</button></div>`);
   if (approx) v.insertAdjacentHTML("beforeend", `<p class="approx">Aucun résultat exact : voici les titres les plus proches de « ${esc(q)} ».</p>`);
   if (!books.length && !folders.length) {
     v.insertAdjacentHTML("beforeend", `<div class="empty"><h2>Rien trouvé</h2><p>${q ? `Aucun titre ni dossier ne contient « ${esc(q)} ». Essaie un nom de héros, d'auteur, de dessinateur ou un numéro comme #666.` : "Aucun livre ne correspond à ces filtres."}</p></div>`);
@@ -1809,10 +1982,14 @@ async function renderSettings(v) {
       <div class="field" style="flex:1;min-width:200px"><label for="pass">Mot de passe</label><input class="txt" id="pass" type="password" autocomplete="current-password" placeholder="${s.passwordSet ? "Enregistré (laisser vide pour le garder)" : ""}"></div>
     </div>
     <p class="hint" style="margin-top:-12px">Le même compte que pour ouvrir \\\\${esc(s.nas)} depuis le PC. Il reste sur cet appareil.</p>` : ""}
-    <div class="field"><label for="nas">Nom de la NAS</label><input class="txt" id="nas" value="${esc(s.nas)}"><p class="hint">Le nom réseau sans les \\\\ (par exemple lord_of_adam).</p></div>
+    <div class="field"><label for="nas">Nom de la NAS</label><input class="txt" id="nas" value="${esc(s.nas)}"><p class="hint">Le nom réseau sans les \\\\ (par exemple lord_of_adam).${DESKTOP ? " Laisse vide s'il n'y a pas de NAS : seuls les autres dossiers seront lus." : ""}</p></div>
     <div class="field"><span class="lbl">Dossiers à scanner</span><p class="hint">Partages trouvés sur \\\\${esc(s.nas)}. Décoche ceux qui ne contiennent pas de lectures pour accélérer le scan.</p>
       <div class="checks" id="roots">${all.map((p, i) => `<label class="check"><input type="checkbox" id="root${i}" value="${esc(p)}" ${roots.includes(p) ? "checked" : ""}><span title="${esc(p)}">${esc(p.split("\\").pop())}</span></label>`).join("")}</div>
       <div class="row"><input class="txt" id="addroot" placeholder="\\\\lord_of_adam\\Partage\\Sous-dossier" style="flex:1;min-width:220px"><button class="btn ghost" id="addrootBtn">Ajouter</button></div></div>
+    ${DESKTOP ? `<div class="field"><span class="lbl">Autres dossiers</span>
+      <p class="hint">Des dossiers de ce PC (D:\\BD) ou de la NAS d'un ami (\\\\nas-ami\\Comics). Nas Reader les lit sans jamais rien y écrire, et ils restent sur ce PC : ils ne sont pas envoyés au téléphone ni à la tablette. Pour la NAS d'un ami, ouvre-la une fois dans l'Explorateur Windows avec son compte.</p>
+      <div class="rows" id="extraRows"></div>
+      <div class="row"><input class="txt" id="addextra" placeholder="D:\\BD ou \\\\nas-ami\\Comics" style="flex:1;min-width:220px"><button class="btn ghost" id="pickExtra">${ico("folder")}Parcourir…</button><button class="btn ghost" id="addExtraBtn">${ico("plus")}Ajouter</button></div></div>` : ""}
     <div class="field"><label for="excl">Dossiers ignorés</label><input class="txt" id="excl" value="${esc(s.excludeFolders.join(", "))}"><p class="hint">Noms de dossiers séparés par des virgules. La corbeille #recycle et _Doublons sont ignorés par défaut.</p></div>
     <label class="check" style="align-self:flex-start"><input type="checkbox" id="onstart" ${s.scanOnStartup ? "checked" : ""}><span>Scanner la NAS à chaque démarrage</span></label>
     <div class="field"><span class="lbl">Synchronisation entre appareils</span>
@@ -1844,6 +2021,12 @@ async function renderSettings(v) {
     <h2>Lecture</h2>
     <label class="check" style="align-self:flex-start"><input type="checkbox" id="autoNext" ${store.get("autoNext", true) ? "checked" : ""}><span>À la dernière page, ouvrir le numéro suivant après 8 secondes</span></label>
     <label class="check" style="align-self:flex-start"><input type="checkbox" id="rtlManga" ${store.get("rtlManga", true) ? "checked" : ""}><span>Lire les mangas de droite à gauche</span></label>
+    <label class="check" style="align-self:flex-start"><input type="checkbox" id="dblLand" ${store.get("doubleLandscape", true) ? "checked" : ""}><span>Double page seulement quand l'écran est en paysage</span></label>
+    ${ANDROID ? "" : `<label class="check" style="align-self:flex-start"><input type="checkbox" id="wheelTurn" ${store.get("wheelTurn", true) ? "checked" : ""}><span>Tourner les pages avec la molette de la souris</span></label>`}
+    <label class="check" style="align-self:flex-start"><input type="checkbox" id="safeTurn" ${store.get("safeTurn", false) ? "checked" : ""}><span>Éviter de tourner les pages par erreur</span></label>
+    <p class="hint" style="margin-top:-12px">Un appui sur le bord de l'écran ne tourne plus la page : il faut un vrai glissement, les flèches ou la molette.</p>
+    <div class="row"><span>Rappel de pause des yeux</span><select class="chip" id="eyeBreak">${[0, 20, 30, 45, 60].map(n => `<option value="${n}" ${+store.get("eyeBreak", 0) === n ? "selected" : ""}>${n ? `toutes les ${n} minutes` : "jamais"}</option>`).join("")}</select></div>
+    <p class="hint" style="margin-top:-12px">La minuterie, pour fermer le livre au bout de 15 à 60 minutes, se règle dans le lecteur avec le bouton chronomètre.</p>
     <p class="hint" style="margin-top:-12px">Le sens choisi dans le lecteur (touche R) est gardé pour chaque série. Les fiches ComicInfo marquées « manga » sont aussi lues de droite à gauche. Les dossiers « Webtoons » s'ouvrent en bande verticale.</p>
 
     <h2>Langue</h2>
@@ -1862,6 +2045,20 @@ async function renderSettings(v) {
       <div class="row" style="margin-top:8px"><button class="btn ghost" id="copyLog">${ico("copy")}Copier</button>
       ${ANDROID ? `<button class="btn ghost" id="shareLog">${ico("share")}Partager</button>` : DESKTOP ? `<button class="btn ghost" id="saveLog">${ico("download")}Enregistrer sur le Bureau</button>` : ""}</div></div></div>`;
   wireSettingsExtras();
+  const extras = [...(s.extraFolders || [])];
+  const drawExtras = () => {
+    const box = $("#extraRows"); if (!box) return;
+    box.hidden = !extras.length;
+    box.innerHTML = extras.map((f, i) => `<div>${ico(f.startsWith("\\\\") ? "folder" : "comic")}<span class="grow" style="overflow-wrap:anywhere">${esc(f)}</span><button class="iconbtn" data-xdel="${i}" title="Retirer">${ico("close")}</button></div>`).join("");
+  };
+  if ($("#extraRows")) {
+    drawExtras();
+    const add = p => { p = (p || "").trim().replace(/[\\/]+$/, ""); if (!p || extras.some(x => x.toLowerCase() === p.toLowerCase())) return; extras.push(p); drawExtras(); };
+    $("#addExtraBtn").onclick = () => { add($("#addextra").value); $("#addextra").value = ""; };
+    $("#addextra").onkeydown = e => { if (e.key === "Enter") $("#addExtraBtn").click(); };
+    $("#pickExtra").onclick = async () => { try { const r = await post("/api/pick-folder"); if (r?.path) add(r.path); } catch (e) { toast(e.message); } };
+    $("#extraRows").onclick = e => { const i = e.target.closest("[data-xdel]")?.dataset.xdel; if (i == null) return; extras.splice(+i, 1); drawExtras(); };
+  }
   $("#addrootBtn").onclick = () => {
     const p = $("#addroot").value.trim(); if (!p) return;
     $("#roots").insertAdjacentHTML("beforeend", `<label class="check"><input type="checkbox" id="root${Date.now()}" value="${esc(p)}" checked><span title="${esc(p)}">${esc(p.split("\\").pop())}</span></label>`);
@@ -1895,7 +2092,7 @@ async function renderSettings(v) {
     const allBoxes = $$("#roots input").map(i => i.value);
     const sharesAll = data.shares.length && checked.length === allBoxes.length && allBoxes.every(p => data.shares.includes(p));
     const ns = {
-      nas: $("#nas").value.trim().replace(/^\\+/, "") || "lord_of_adam",
+      nas: $("#nas").value.trim().replace(/^\\+/, "") || (DESKTOP && extras.length ? "" : "lord_of_adam"),
       roots: sharesAll ? [] : checked,
       excludeFolders: $("#excl").value.split(",").map(x => x.trim()).filter(Boolean),
       scanOnStartup: $("#onstart").checked,
@@ -1905,6 +2102,7 @@ async function renderSettings(v) {
       autoUpdate: $("#autoup").checked,
     };
     if (ANDROID) Object.assign(ns, { host: $("#host").value.trim(), user: $("#user").value.trim(), password: $("#pass").value });
+    else ns.extraFolders = extras;
     if (APP) { await post("/api/settings", ns); await post("/api/scan"); pollStatus(); }
     S.nas = ns.nas; toast("Réglages enregistrés, scan lancé");
   };
@@ -1998,6 +2196,10 @@ function wireSettingsExtras() {
   // ---- reading
   $("#autoNext").onchange = e => store.set("autoNext", e.target.checked);
   $("#rtlManga").onchange = e => store.set("rtlManga", e.target.checked);
+  $("#dblLand").onchange = e => store.set("doubleLandscape", e.target.checked);
+  if ($("#wheelTurn")) $("#wheelTurn").onchange = e => store.set("wheelTurn", e.target.checked);
+  $("#safeTurn").onchange = e => store.set("safeTurn", e.target.checked);
+  $("#eyeBreak").onchange = e => { store.set("eyeBreak", +e.target.value); EYE.since = Date.now(); };
   // ---- language
   $$("[data-lang]").forEach(b => b.onclick = () => { store.set("lang", b.dataset.lang); location.reload(); });
   // ---- storage
@@ -2134,7 +2336,7 @@ function readerShell(b) {
     <div class="rload"><div><div class="spinner"></div><span>Chargement depuis la NAS…</span></div></div>
     <div class="rbar top">
       <button class="rbtn" data-r="close" title="Fermer (Échap)">${ico("close")}</button>
-      <div class="rtitle" translate="no"><b>${esc(b.display)}</b><small>${esc([KINDS[b.kind].label, ...b.crumbs.map(cleanName)].join(" › "))}</small></div>
+      <div class="rtitle" translate="no"><b>${esc(b.display)}${b.subtitle ? `<span class="rsub"> · ${esc(b.subtitle)}</span>` : ""}</b><small>${esc([KINDS[b.kind].label, ...b.crumbs.map(cleanName)].join(" › "))}</small></div>
       <div class="rtools" style="display:flex;gap:8px;align-items:center"></div>
       ${ANDROID ? "" : `<button class="rbtn" data-r="full" title="Plein écran (F)">${ico("full")}</button>`}
     </div>
@@ -2145,12 +2347,53 @@ function readerShell(b) {
   el.addEventListener("mousemove", wake); el.addEventListener("touchstart", wake, { passive: true });
   el.addEventListener("click", e => {
     const t = e.target.closest("[data-r]"); if (t) return readerAction(t.dataset.r, t);
+    // "Avoid turning by mistake": a tap on the edges only shows the bars.
+    if (e.target.closest(".zone") && store.get("safeTurn", false)) return;
     if (e.target.closest(".zone.l")) return R.prev?.();
     if (e.target.closest(".zone.r")) return R.next?.();
   });
   bindStage(el);
   el.focus(); wake();
+  // Eye breaks count the reading time across books, unless the reader stayed closed for 5 minutes.
+  if (!EYE.since || Date.now() - EYE.closedAt > 300000) EYE.since = Date.now();
+  clearInterval(R.tick); R.tick = setInterval(readerTick, 5000);
   return el;
+}
+/* ---- reading timer and eye breaks ---- */
+const SLEEP = { end: 0, min: 0 };
+const EYE = { since: 0, closedAt: 0 };
+const SLEEP_STEPS = [0, 15, 30, 45, 60];
+const timerLabel = () => SLEEP.end ? `${Math.max(1, Math.ceil((SLEEP.end - Date.now()) / 60000))} min` : "";
+function setSleep(min) {
+  SLEEP.min = min; SLEEP.end = min ? Date.now() + min * 60000 : 0;
+  const b = R.el?.querySelector("[data-r=timer]");
+  if (b) { b.classList.toggle("on", !!min); b.lastChild.textContent = timerLabel(); }
+}
+function readerTick() {
+  if (!R.el) return;
+  const now = Date.now();
+  const b = R.el.querySelector("[data-r=timer]"); if (b && SLEEP.end) b.lastChild.textContent = timerLabel();
+  if (SLEEP.end && now >= SLEEP.end && !R.el.querySelector(".sleepcard")) {
+    SLEEP.end = 0;
+    R.el.querySelector("[data-r=timer]")?.classList.remove("on");
+    R.el.insertAdjacentHTML("beforeend", `<div class="endcard sleepcard"><div><h2>C'est l'heure</h2><p>Ta minuterie de ${SLEEP.min} minutes est finie. Ta page est gardée.</p>
+      <span class="count" id="sleepCount">Le livre se ferme dans 60 s</span>
+      <div class="btns"><button class="btn primary" data-r="close">Fermer le livre</button><button class="btn ghost" data-r="more">Encore 10 minutes</button></div></div></div>`);
+    R.el.classList.remove("calm");
+    let left = 60;
+    clearInterval(R.sleepCount);
+    R.sleepCount = setInterval(() => {
+      const c = R.el?.querySelector("#sleepCount");
+      if (!c) return clearInterval(R.sleepCount);
+      if (--left <= 0) { clearInterval(R.sleepCount); closeReader(); return; }
+      c.textContent = `Le livre se ferme dans ${left} s`;
+    }, 1000);
+  }
+  const every = +store.get("eyeBreak", 0);
+  if (every && EYE.since && now - EYE.since >= every * 60000) {
+    EYE.since = now;
+    toast("Pause pour les yeux : regarde au loin pendant 20 secondes.");
+  }
 }
 let calmTimer;
 function wake() {
@@ -2161,7 +2404,8 @@ function closeReader(rerender = true) {
   if (!R.el) return;
   if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
   R.epub?.destroy?.(); R.el.remove(); R.el = null; R.epub = null; R.next = R.prev = null;
-  clearInterval(R.countdown);
+  clearInterval(R.countdown); clearInterval(R.tick); clearInterval(R.sleepCount);
+  EYE.closedAt = Date.now();
   document.body.style.overflow = "";
   window.NasAndroid?.immersive(false);
   window.NasAndroid?.orientation?.("auto");
@@ -2193,7 +2437,7 @@ async function openBook(id, exact = false) {
   if (b.fmt === "mobi" || b.fmt === "azw3") return readerError(`Le format ${b.fmt.toUpperCase()} (Kindle) ne s'affiche pas dans Nas Reader. Ouvre-le avec Calibre ou l'application Kindle.`, b);
   try {
     R.pages = APP ? (await api(`/api/book/${b.id}/open`)).pages : S.progress[b.id]?.pages || 18 + (hash(b.id) % 14);
-  } catch (e) { return readerError(e.message, b); }
+  } catch (e) { return readerError(b.fmt === "cba" ? `Cette archive CBA est au format ACE, que Nas Reader ne sait pas lire.${DESKTOP ? " Ouvre-la avec Windows (WinRAR la lit)" : " Ouvre-la sur le PC"} ou convertis-la en CBZ.` : e.message, b); }
   if (R.el !== el) return;
   el.querySelector(".rload").remove();
   RS.mode = b.kind === "webtoon" ? store.get("modeWebtoon", "webtoon") : RS.gmode;
@@ -2213,8 +2457,10 @@ const PAGE_W = ANDROID ? 2048 : 0;
 const pageSrc = (i, w = PAGE_W) => APP ? `/api/book/${R.book.id}/page/${i}${w ? `?w=${w}` : ""}` : fakePage(R.book, i);
 const isWide = i => { const d = R.dims[i]; return d && d.w > d.h * 1.05; };
 const isScroll = () => RS.mode === "scroll" || RS.mode === "webtoon";
+/** Double page, unless the screen is upright and double pages are kept for landscape. */
+const dblOn = () => RS.mode === "double" && !(store.get("doubleLandscape", true) && innerHeight > innerWidth);
 function spreadAt(i) {
-  if (RS.mode !== "double" || i === 0) return [i];
+  if (!dblOn() || i === 0) return [i];
   if (isWide(i)) return [i];
   if (i + 1 < R.pages && !isWide(i + 1)) return [i, i + 1];
   return [i];
@@ -2231,7 +2477,7 @@ function turn(dir) {
     if (R.el.querySelector(".endcard")) { R.el.querySelector(".endcard").remove(); return; }
     if (R.i === 0) return;
     let j = R.i - 1;
-    if (RS.mode === "double" && j > 0 && !isWide(j) && j - 1 >= 1 && !isWide(j - 1)) j--;
+    if (dblOn() && j > 0 && !isWide(j) && j - 1 >= 1 && !isWide(j - 1)) j--;
     R.i = j;
   }
   drawPages();
@@ -2403,6 +2649,7 @@ function buildBars() {
     <button class="rbtn" data-r="thumbs" title="Miniatures (T)">${ico("grid")}</button>
     ${ANDROID ? `<button class="rbtn" data-r="orient" title="Orientation de l'écran pour cette série">${ico("rotate")}${ORIENT[orientation()]}</button>` : ""}
     <button class="rbtn" data-r="cover" title="Utiliser cette page comme couverture">${ico("image")}</button>
+    <button class="rbtn ${SLEEP.end ? "on" : ""}" data-r="timer" title="Minuterie : fermer le livre après un moment">${ico("timer")}<span>${timerLabel()}</span></button>
     ${readerFavButton()}`;
   R.el.querySelector(".rbar.bottom").innerHTML = `
     <div class="thumbs" ${RS.thumbs ? "" : "hidden"}></div>
@@ -2463,6 +2710,12 @@ function readerAction(a, t) {
   if (a === "full") { if (document.fullscreenElement) document.exitFullscreen().catch(() => { }); else R.el.requestFullscreen?.().catch(() => { }); return; }
   if (a === "ext") { post(`/api/book/${R.book.id}/external`); return; }
   if (a === "next") { clearInterval(R.countdown); return openBook(t.dataset.v); }
+  if (a === "timer") {
+    const nx = SLEEP_STEPS[(SLEEP_STEPS.indexOf(SLEEP.end ? SLEEP.min : 0) + 1) % SLEEP_STEPS.length];
+    setSleep(nx); toast(nx ? `Le livre se fermera dans ${nx} minutes` : "Minuterie arrêtée");
+    return;
+  }
+  if (a === "more") { clearInterval(R.sleepCount); R.el.querySelector(".sleepcard")?.remove(); setSleep(10); return; }
   if (a === "stay") { clearInterval(R.countdown); R.el.querySelector("#nextCount")?.remove(); t.remove(); return; }
   if (a === "cover") return useAsCover();
   if (a === "orient") {
@@ -2515,7 +2768,8 @@ function bindStage(el) {
     if (pinch) { if (!e.touches.length) pinch = null; return; }
     if (!touch || R.zoom > 1 || isScroll() || R.epub || e.target.closest(".rbar")) { touch = null; return; }
     const t = e.changedTouches[0], dx = t.clientX - touch.x, dy = t.clientY - touch.y;
-    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4 && Date.now() - touch.t < 700) {
+    const safe = store.get("safeTurn", false);
+    if (Math.abs(dx) > (safe ? 110 : 45) && Math.abs(dx) > Math.abs(dy) * (safe ? 2 : 1.4) && Date.now() - touch.t < 700) {
       e.preventDefault();
       (dx < 0) !== !!R.rtl ? R.next() : R.prev();
     }
@@ -2623,7 +2877,7 @@ let wheelLock = 0;
 document.addEventListener("wheel", e => {
   if (!R.el || R.epub || isScroll()) return;
   if (e.ctrlKey) { e.preventDefault(); setZoom(e.deltaY < 0 ? R.zoom * 1.15 : R.zoom / 1.15, stageAnchor(e)); return; }
-  if (R.zoom > 1) return;
+  if (R.zoom > 1 || !store.get("wheelTurn", true)) return;
   const st = R.el.querySelector(".stage");
   if (RS.fit === "width" && st.scrollHeight > st.clientHeight + 4) {
     const atEnd = st.scrollTop + st.clientHeight >= st.scrollHeight - 2, atTop = st.scrollTop <= 0;
@@ -2654,7 +2908,7 @@ document.addEventListener("click", e => {
   if (t.dataset.kind != null) { S.filterKind = t.dataset.kind || null; return render(); }
   if (t.dataset.flt) {
     const k = t.dataset.flt;
-    if (k === "reset") { S.filters = { fmt: null, state: null, dl: false, pub: null }; S.filterKind = null; }
+    if (k === "reset") { S.filters = { fmt: null, state: null, dl: false, pub: null, lang: null }; S.filterKind = null; }
     else if (k === "dl") S.filters.dl = !S.filters.dl;
     else S.filters[k] = t.dataset.v || null;
     return render();
@@ -2668,6 +2922,15 @@ document.addEventListener("click", e => {
     (t.dataset.v === "1" ? download(books) : removeDownloads(books)).then(refresh);
     return;
   }
+  if (t.dataset.act === "random") {
+    let pool;
+    if (t.dataset.scope === "search") pool = searchBooks($("#q").value.trim()).books;
+    else { const node = nodeAt(S.route.kind, S.route.path); pool = node ? subtreeBooks(node) : []; }
+    pool = pool.filter(b => !progOf(b) && reachable(b));
+    if (!pool.length) return toast("Tout a déjà été ouvert ici");
+    return showSheet(pool[Math.floor(Math.random() * pool.length)].id);
+  }
+  if (t.dataset.act === "stats-compare") { store.set("statsCompare", !store.get("statsCompare", false)); return render(); }
   if (t.dataset.act === "offline-clear") { removeDownloads(offlineBooks()).then(refresh); return; }
   if (t.dataset.act === "profiles") {
     const r = t.getBoundingClientRect();
@@ -2733,6 +2996,12 @@ $("#suggest").addEventListener("click", e => {
 });
 $("#filterBtn").onclick = () => { if (S.route.view !== "search") go({ view: "search" }); };
 addEventListener("scroll", () => $("#top").classList.toggle("scrolled", scrollY > 4), { passive: true });
+// Turning the tablet switches between one and two pages when double pages are kept for landscape.
+let rzTimer;
+addEventListener("resize", () => {
+  if (!R.el || R.epub || RS.mode !== "double") return;
+  clearTimeout(rzTimer); rzTimer = setTimeout(() => { if (R.el && !R.epub) { drawPages(); updateBars(); } }, 200);
+});
 
 /* ======================================================================= data */
 async function loadLibrary() {
@@ -2979,7 +3248,7 @@ const EN = {
   "Retour à la bibliothèque": "Back to the library", "Rester ici": "Stay here", "Texte plus petit": "Smaller text", "Texte plus grand": "Larger text",
   // settings
   "Adresse de la NAS": "NAS address", "Utilisateur de la NAS": "NAS user", "Mot de passe": "Password", "Enregistré (laisser vide pour le garder)": "Saved (leave empty to keep it)",
-  "Nom de la NAS": "NAS name", "Le nom réseau sans les \\\\ (par exemple lord_of_adam).": "The network name without the \\\\ (for example lord_of_adam).",
+  "Nom de la NAS": "NAS name", "Le nom réseau sans les \\\\ (par exemple lord_of_adam). Laisse vide s'il n'y a pas de NAS : seuls les autres dossiers seront lus.": "The network name without the \\\\ (for example lord_of_adam). Leave it empty if there is no NAS: only the other folders will be read.", "Le nom réseau sans les \\\\ (par exemple lord_of_adam).": "The network name without the \\\\ (for example lord_of_adam).",
   "Dossiers à scanner": "Folders to scan", "Ajouter": "Add", "Dossiers ignorés": "Ignored folders",
   "Noms de dossiers séparés par des virgules. La corbeille #recycle et _Doublons sont ignorés par défaut.": "Folder names separated by commas. The #recycle bin and _Doublons are ignored by default.",
   "Scanner la NAS à chaque démarrage": "Scan the NAS at every launch", "Synchronisation entre appareils": "Sync between devices",
@@ -3034,10 +3303,40 @@ const EN = {
   "Ce livre n'est pas téléchargé sur ce PC et la NAS n'est pas joignable. Il s'ouvrira de retour à la maison.": "This book is not downloaded on this PC and the NAS is out of reach. It will open back home.",
   "Ce fichier n'existe plus sur la NAS. Relance un scan.": "This file is no longer on the NAS. Scan again.", "Accès refusé à ce fichier sur la NAS.": "Access to this file on the NAS was denied.",
   "La NAS ne répond pas. Vérifie qu'elle est allumée.": "The NAS does not answer. Check that it is on.", "Aucune mise à jour prête.": "No update is ready.",
+  // 1.5: sources, reader options, library, stats
+  "Ce PC": "This PC", "Autres dossiers": "Other folders", "Parcourir…": "Browse…", "Ajouter": "Add", "Retirer": "Remove",
+  "Des dossiers de ce PC (D:\\BD) ou de la NAS d'un ami (\\\\nas-ami\\Comics). Nas Reader les lit sans jamais rien y écrire, et ils restent sur ce PC : ils ne sont pas envoyés au téléphone ni à la tablette. Pour la NAS d'un ami, ouvre-la une fois dans l'Explorateur Windows avec son compte.":
+    "Folders on this PC (D:\\Comics) or on a friend's NAS (\\\\friend-nas\\Comics). Nas Reader only reads them, never writes there, and they stay on this PC: they are not sent to the phone or the tablet. For a friend's NAS, open it once in Windows Explorer with their account.",
+  "Double page seulement quand l'écran est en paysage": "Double page only when the screen is in landscape",
+  "Tourner les pages avec la molette de la souris": "Turn pages with the mouse wheel", "Éviter de tourner les pages par erreur": "Avoid turning pages by mistake",
+  "Un appui sur le bord de l'écran ne tourne plus la page : il faut un vrai glissement, les flèches ou la molette.": "A tap on the edge of the screen no longer turns the page: it takes a real swipe, the arrows or the wheel.",
+  "Rappel de pause des yeux": "Eye-break reminder", "jamais": "never",
+  "La minuterie, pour fermer le livre au bout de 15 à 60 minutes, se règle dans le lecteur avec le bouton chronomètre.": "The timer, to close the book after 15 to 60 minutes, is set in the reader with the stopwatch button.",
+  "Minuterie : fermer le livre après un moment": "Timer: close the book after a while", "Minuterie arrêtée": "Timer off",
+  "C'est l'heure": "Time's up", "Fermer le livre": "Close the book", "Encore 10 minutes": "10 more minutes",
+  "Pause pour les yeux : regarde au loin pendant 20 secondes.": "Eye break: look far away for 20 seconds.",
+  "Livres oubliés": "Forgotten books", "commencés il y a plus d'un an": "started more than a year ago",
+  "Au hasard": "At random", "Au hasard parmi ces résultats": "Random pick from these results", "Un livre jamais ouvert, au hasard": "A book never opened, at random",
+  "Un livre jamais ouvert parmi ces résultats": "A book never opened among these results", "Tout a déjà été ouvert ici": "Everything here has already been opened",
+  "Langue": "Language", "Toutes": "All", "VF (français)": "French edition", "VO (version originale)": "Original edition",
+  "Badges": "Badges", "Profils comparés": "Profiles compared", "Afficher": "Show", "Masquer": "Hide", "Profil": "Profile", "Pages": "Pages", "Temps": "Time",
+  "Terminés": "Finished", "Jours": "Days", "Record": "Record", "Taille de la bibliothèque": "Library size",
+  "titres présents à la fin de chaque mois, d'après la date des fichiers": "titles at the end of each month, from the file dates",
+  "sur le disque": "on disk", "titres en 12 mois": "titles in 12 months", "pages lues": "pages read",
 };
 const N = "([\\d\\s\\u202f\\u00a0.,]+)";
 /** [pattern, English] — $1… are the captured parts; a function gets the match. */
 const EN_RE = [
+  [`^([+-]?\\d+) % vs (\\d{4})$`, "$1 % vs $2"],
+  [`^${N} sur ${N} · le dernier gagné et le prochain de chaque sorte$`, "$1 of $2 · the last one earned and the next of each kind"],
+  [`^livres? terminés?( · encore ${N})?$`, (m, e, n) => `books finished${e ? ` · ${n} to go` : ""}`],
+  [`^pages lues( · encore ${N})?$`, (m, e, n) => `pages read${e ? ` · ${n} to go` : ""}`],
+  [`^jours d'affilée( · encore ${N})?$`, (m, e, n) => `days in a row${e ? ` · ${n} to go` : ""}`],
+  [`^séries? terminées?( · encore ${N})?$`, (m, e, n) => `series finished${e ? ` · ${n} to go` : ""}`],
+  [`^toutes les ${N} minutes$`, "every $1 minutes"], [`^Le livre se fermera dans ${N} minutes$`, "The book will close in $1 minutes"],
+  [`^Le livre se ferme dans ${N} s$`, "The book closes in $1 s"],
+  [`^Ta minuterie de ${N} minutes est finie\\. Ta page est gardée\\.$`, "Your $1-minute timer is over. Your page is kept."],
+  [`^Cette archive CBA est au format ACE, que Nas Reader ne sait pas lire\\.(.*)$`, (m, r) => "This CBA archive uses the ACE format, which Nas Reader cannot read." + (/Windows/.test(r) ? " Open it with Windows (WinRAR can read it) or convert it to CBZ." : " Open it on the PC or convert it to CBZ.")],
   [`^${N} / ${N} préparées$`, "$1 / $2 ready"], [`^${N} fichiers trouvés$`, "$1 files found"],
   [`^${N} titres?$`, (m, n) => `${n} title${/^1$/.test(n.trim()) ? "" : "s"}`], [`^Dernier scan (.+)$`, "Last scan $1"],
   [`^Tu peux lire tes ${N} livres? téléchargés?\\. Le reste s'ouvrira de retour à la maison\\.$`, "You can read your $1 downloaded books. The rest will open back home."],

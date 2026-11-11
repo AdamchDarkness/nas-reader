@@ -35,7 +35,7 @@ public static class Sync
     public static async Task RunAsync()
     {
         var s = Settings.Current;
-        if (!s.SyncEnabled) return;
+        if (!s.UsesSync) return;
         if (!await Gate.WaitAsync(0)) return;
         try
         {

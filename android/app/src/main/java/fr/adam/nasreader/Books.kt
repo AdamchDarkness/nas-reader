@@ -75,7 +75,7 @@ object Books {
         val dir = File(App.pages, book.id).apply { mkdirs(); setLastModified(System.currentTimeMillis()) }
         return when (book.fmt) {
             "pdf" -> PdfBook(book, dir)
-            "cbz", "cbr", "cb7" -> ArchiveBook(book, dir)
+            "cbz", "cbr", "cb7", "cbt", "cba" -> ArchiveBook(book, dir)
             else -> object : OpenBook(book) { override fun page(index: Int) = throw IOException("Pas de pages") }
         }
     }
@@ -86,7 +86,7 @@ object Books {
     }
 
     fun prefetch(book: Book) {
-        if (book.fmt !in setOf("pdf", "cbz", "cbr", "cb7")) return
+        if (book.fmt !in setOf("pdf", "cbz", "cbr", "cb7", "cbt", "cba")) return
         pool.execute {
             runCatching {
                 val ob = get(book)
